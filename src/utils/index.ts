@@ -1,3 +1,8 @@
+export { createTooltip } from './tooltip'
+export { categories } from './categories'
+export { createBBox } from './bbox'
+export { createSegmentation } from './segmentation'
+
 function hashCode(str: string) {
   let hash = 0
   for (let i = 0; i < str.length; i++) {

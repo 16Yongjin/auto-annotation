@@ -1,6 +1,6 @@
 import { Category } from './../models/datasets'
 
-const categories: Category[] = [
+export const categories: Category[] = [
   { supercategory: 'person', id: 1, name: 'person' },
   { supercategory: 'vehicle', id: 2, name: 'bicycle' },
   { supercategory: 'vehicle', id: 3, name: 'car' },
@@ -82,5 +82,3 @@ const categories: Category[] = [
   { supercategory: 'indoor', id: 89, name: 'hair drier' },
   { supercategory: 'indoor', id: 90, name: 'toothbrush' }
 ]
-
-export default categories
