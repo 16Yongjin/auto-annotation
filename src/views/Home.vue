@@ -7,8 +7,11 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Home'
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator'
+
+@Component
+export default class App extends Vue {
+  @Prop() private msg!: string
 }
 </script>
