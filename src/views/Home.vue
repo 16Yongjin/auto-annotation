@@ -6,6 +6,7 @@
       <button @click="showBBox">BBox</button>
       <button @click="showSegmentation">Segmentation</button>
       <button @click="hideAnnotation">Hide All</button>
+      <button @click="userBBoxTool">Draw BBox</button>
     </div>
   </div>
 </template>
@@ -14,7 +15,9 @@
 import Paper from 'paper'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import { Coco } from '@/models/datasets'
+import { UserAction } from '@/models/user'
 import { createBBox, createSegmentation } from '@/utils'
+import { createBBoxMouseTool } from '@/utils/draw'
 import coco from '@/assets/coco1.json'
 
 @Component({ name: 'Home' })
@@ -22,7 +25,10 @@ export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
   segmentation: paper.Group | null = null
+  tool: paper.Tool | null = null
   bbox: paper.Group | null = null
+  userAnnotation: paper.Path[] = []
+  userActions: UserAction[] = []
 
   @Prop() private msg!: string
 
@@ -47,6 +53,17 @@ export default class Home extends Vue {
     }
   }
 
+  userBBoxTool() {
+    if (this.tool) {
+      this.tool.remove()
+      this.tool = null
+    }
+    this.tool = createBBoxMouseTool((bbox: paper.Path.Rectangle) => {
+      this.userAnnotation.push(bbox)
+      this.userActions.push({ name: 'addBBox', item: bbox })
+    })
+  }
+
   async mounted() {
     this.canvas = document.querySelector('canvas#canvas')
 
@@ -63,6 +80,17 @@ export default class Home extends Vue {
 
     const raster = new Paper.Raster(img)
     raster.position = Paper.view.center
+
+    window.addEventListener('keydown', e => this.keyHandler(e))
+  }
+
+  keyHandler(e: KeyboardEvent) {
+    if (e.ctrlKey && e.key === 'z') this.undo()
+  }
+
+  undo() {
+    const userAction = this.userActions.pop()
+    if (userAction) userAction.item.remove()
   }
 }
 </script>
