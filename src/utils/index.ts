@@ -2,6 +2,7 @@ export { createTooltip } from './tooltip'
 export { categories } from './categories'
 export { createBBox } from './bbox'
 export { createSegmentation } from './segmentation'
+export { createImage } from './image'
 
 function hashCode(str: string) {
   let hash = 0

@@ -8,6 +8,9 @@ function drawBox(start: paper.Point, end: paper.Point, color: paper.Color) {
   return box
 }
 
+const minimumBBoxSize = (box: paper.Path.Rectangle) =>
+  box.bounds.width >= 5 && box.bounds.height >= 5
+
 export function createBBoxMouseTool(onDrawEnd: Function) {
   const tool = new Paper.Tool()
 
@@ -30,11 +33,11 @@ export function createBBoxMouseTool(onDrawEnd: Function) {
     box = drawBox(downPoint, point, boxColor)
     console.log(box.bounds.area)
 
-    if (box.bounds.width <= 5 || box.bounds.height <= 5) {
-      box.remove()
-    } else {
+    if (minimumBBoxSize(box)) {
       onDrawEnd(box)
       box = null
+    } else {
+      box.remove()
     }
   }
 
