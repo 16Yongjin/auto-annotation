@@ -1,2 +1,2 @@
-export { createBBoxMouseTool } from './drawBBox'
-export { createSegmentationTool } from './drawSegmentation'
+export { createBBoxDrawTool } from './drawBBox'
+export { createSegmentationDrawTool } from './drawSegmentation'

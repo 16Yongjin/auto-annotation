@@ -1,18 +1,16 @@
 import Paper from 'paper'
 
 function drawSegmentation(path: paper.Path) {
-  console.log(path)
   const compoundPath = new Paper.CompoundPath('')
-  compoundPath.addChild(path)
+  compoundPath.addChild(path.clone())
   compoundPath.strokeColor = new Paper.Color('black')
   compoundPath.fillColor = Paper.Color.random()
   compoundPath.opacity = 0.5
-  compoundPath.rasterize()
 
   return compoundPath
 }
 
-export function createSegmentationTool(onDrawEnd: Function) {
+export function createSegmentationDrawTool(onDrawEnd: Function) {
   const tool = new Paper.Tool()
 
   let path: paper.Path | null = null
@@ -31,12 +29,15 @@ export function createSegmentationTool(onDrawEnd: Function) {
 
     path.add(point)
     path.closePath()
+    path.simplify()
+    path.flatten(4)
 
     if (path.length > 30) {
       console.log('hi')
       const compoundPath = drawSegmentation(path)
       onDrawEnd(compoundPath)
     }
+    path.remove()
     path = null
   }
 

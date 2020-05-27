@@ -11,7 +11,7 @@ function drawBox(start: paper.Point, end: paper.Point, color: paper.Color) {
 const minimumBBoxSize = (box: paper.Path.Rectangle) =>
   box.bounds.width >= 5 && box.bounds.height >= 5
 
-export function createBBoxMouseTool(onDrawEnd: Function) {
+export function createBBoxDrawTool(onDrawEnd: Function) {
   const tool = new Paper.Tool()
 
   let boxColor = Paper.Color.random()

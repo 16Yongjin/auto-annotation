@@ -3,11 +3,12 @@
     <canvas width="300" height="300" id="canvas"></canvas>
 
     <div>
-      <button @click="showBBox">BBox</button>
-      <button @click="showSegmentation">Segmentation</button>
+      <button @click="showBBox">Show BBox</button>
+      <button @click="showSegmentation">Show Segmentation</button>
       <button @click="hideAnnotation">Hide All</button>
-      <button @click="useBBoxTool">Draw BBox</button>
-      <button @click="useSegmentationTool">Draw Segmentation</button>
+      <button @click="useBBoxDrawTool">Draw BBox</button>
+      <button @click="useSegmentationDrawTool">Draw Segmentation</button>
+      <button @click="useSegmentationEditTool">Edit Segmentation</button>
       <button @click="removeTool">Remove Tool</button>
     </div>
   </div>
@@ -19,14 +20,15 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 import { Coco } from '@/models/datasets'
 import { UserAction } from '@/models/user'
 import { createBBox, createSegmentation, createImage } from '@/utils'
-import { createBBoxMouseTool, createSegmentationTool } from '@/utils/draw'
+import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
+import { createSegmentationEditTool } from '@/utils/edit'
 import coco from '@/assets/coco1.json'
 
 @Component({ name: 'Home' })
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
-  segmentation: paper.Group | null = null
+  segmentation: paper.CompoundPath[] = []
   tool: paper.Tool | null = null
   bbox: paper.Group | null = null
   userBBox: paper.Path[] = []
@@ -37,12 +39,12 @@ export default class Home extends Vue {
 
   showBBox() {
     if (this.bbox) return
-    this.bbox = createBBox(this.coco)
+    this.bbox = createBBox(this.coco.annotations)
   }
 
   showSegmentation() {
-    if (this.segmentation) return
-    this.segmentation = createSegmentation(this.coco)
+    if (this.segmentation.length) return
+    this.segmentation = createSegmentation(this.coco.annotations)
   }
 
   hideAnnotation() {
@@ -50,23 +52,30 @@ export default class Home extends Vue {
       this.bbox.remove()
       this.bbox = null
     }
-    if (this.segmentation) {
-      this.segmentation.remove()
-      this.segmentation = null
+    if (this.segmentation.length) {
+      this.segmentation.forEach(i => i.remove())
+      this.segmentation = []
     }
   }
 
-  useSegmentationTool() {
+  useSegmentationDrawTool() {
     this.removeTool()
-    this.tool = createSegmentationTool((segmentation: paper.CompoundPath) => {
-      this.userSegmentation.push(segmentation)
-      this.userActions.push({ name: 'addSegmentation', item: segmentation })
-    })
+    this.tool = createSegmentationDrawTool(
+      (segmentation: paper.CompoundPath) => {
+        this.userSegmentation.push(segmentation)
+        this.userActions.push({ name: 'addSegmentation', item: segmentation })
+      }
+    )
   }
 
-  useBBoxTool() {
+  useSegmentationEditTool() {
     this.removeTool()
-    this.tool = createBBoxMouseTool((bbox: paper.Path.Rectangle) => {
+    this.tool = createSegmentationEditTool()
+  }
+
+  useBBoxDrawTool() {
+    this.removeTool()
+    this.tool = createBBoxDrawTool((bbox: paper.Path.Rectangle) => {
       this.userBBox.push(bbox)
       this.userActions.push({ name: 'addBBox', item: bbox })
     })
@@ -90,7 +99,8 @@ export default class Home extends Vue {
 
     window.addEventListener('keydown', e => this.keyHandler(e))
 
-    this.useSegmentationTool()
+    this.showSegmentation()
+    this.useSegmentationEditTool()
   }
 
   keyHandler(e: KeyboardEvent) {

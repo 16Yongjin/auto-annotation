@@ -1,13 +1,13 @@
 import Paper, { Point } from 'paper'
 import ColorHash from 'color-hash'
 import { categories } from '@/utils'
-import { Coco } from '@/models/datasets'
+import { Annotation } from '@/models/datasets'
 
-export function createBBox(data: Coco) {
+export function createBBox(data: Annotation[]) {
   const colorHash = new ColorHash()
   const annotations = new Paper.Group()
 
-  data.annotations.forEach(annotation => {
+  data.forEach(annotation => {
     // 바운드 박스
     const [x, y, w, h] = annotation.bbox
     const boxStart = new Point(x, y)
