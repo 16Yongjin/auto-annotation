@@ -8,6 +8,8 @@ const hitOptions = {
 }
 
 export function createSegmentationEditTool() {
+  Paper.settings.handleSize = 6
+
   const tool = new Paper.Tool()
 
   let segment: paper.Segment | null = null
@@ -36,12 +38,12 @@ export function createSegmentationEditTool() {
     }
   }
 
-  tool.onMouseMove = function(event: paper.ToolEvent) {
+  tool.onMouseMove = function({ item }: paper.ToolEvent) {
     Paper.project.activeLayer.selected = false
 
-    if (event.item && event.item.className !== 'Raster') {
-      event.item.selected = true
-    }
+    if (!item || item.className === 'Raster') return
+
+    item.selected = true
   }
 
   tool.onMouseDrag = function(event: paper.MouseEvent) {

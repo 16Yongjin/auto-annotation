@@ -7,6 +7,7 @@
       <button @click="showSegmentation">Show Segmentation</button>
       <button @click="hideAnnotation">Hide All</button>
       <button @click="useBBoxDrawTool">Draw BBox</button>
+      <button @click="useBBoxEditTool">Edit BBox</button>
       <button @click="useSegmentationDrawTool">Draw Segmentation</button>
       <button @click="useSegmentationEditTool">Edit Segmentation</button>
       <button @click="removeTool">Remove Tool</button>
@@ -21,7 +22,7 @@ import { Coco } from '@/models/datasets'
 import { UserAction } from '@/models/user'
 import { createBBox, createSegmentation, createImage } from '@/utils'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
-import { createSegmentationEditTool } from '@/utils/edit'
+import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
 import coco from '@/assets/coco1.json'
 
 @Component({ name: 'Home' })
@@ -30,7 +31,7 @@ export default class Home extends Vue {
   canvas: HTMLCanvasElement | null = null
   segmentation: paper.CompoundPath[] = []
   tool: paper.Tool | null = null
-  bbox: paper.Group | null = null
+  bbox: paper.Group[] = []
   userBBox: paper.Path[] = []
   userSegmentation: paper.CompoundPath[] = []
   userActions: UserAction[] = []
@@ -38,8 +39,8 @@ export default class Home extends Vue {
   @Prop() private msg!: string
 
   showBBox() {
-    if (this.bbox) return
-    this.bbox = createBBox(this.coco.annotations)
+    if (this.bbox.length) return
+    this.bbox = createBBox(this.coco.annotations, { category: false })
   }
 
   showSegmentation() {
@@ -48,12 +49,12 @@ export default class Home extends Vue {
   }
 
   hideAnnotation() {
-    if (this.bbox) {
-      this.bbox.remove()
-      this.bbox = null
+    if (this.bbox.length) {
+      this.bbox.forEach(b => b.remove())
+      this.bbox = []
     }
     if (this.segmentation.length) {
-      this.segmentation.forEach(i => i.remove())
+      this.segmentation.forEach(s => s.remove())
       this.segmentation = []
     }
   }
@@ -81,6 +82,11 @@ export default class Home extends Vue {
     })
   }
 
+  useBBoxEditTool() {
+    this.removeTool()
+    this.tool = createBBoxEditTool()
+  }
+
   removeTool() {
     if (this.tool) {
       this.tool.remove()
@@ -99,8 +105,7 @@ export default class Home extends Vue {
 
     window.addEventListener('keydown', e => this.keyHandler(e))
 
-    this.showSegmentation()
-    this.useSegmentationEditTool()
+    this.useBBoxDrawTool()
   }
 
   keyHandler(e: KeyboardEvent) {
