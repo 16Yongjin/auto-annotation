@@ -4,10 +4,11 @@ import { categories } from '@/utils'
 import { Annotation } from '@/models/datasets'
 import { CreateBBoxOptions } from '@/models/options/createBBox'
 
-export function createBBox(
-  data: Annotation[],
-  { category }: CreateBBoxOptions
-) {
+const defaultOption: CreateBBoxOptions = {
+  category: false
+}
+
+export function createBBox(data: Annotation[], { category } = defaultOption) {
   const colorHash = new ColorHash()
   const annotations = data.map(annotation => {
     // 바운드 박스

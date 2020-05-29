@@ -4,19 +4,21 @@ import ColorHash from 'color-hash'
 import { Annotation } from '@/models/datasets'
 import { categories, createTooltip } from '@/utils'
 import { removeTooltip } from '@/utils/tooltip'
+import { CreateSegmentationOptions } from '@/models/options/createSegmentation'
 
 const toPoint = ([x, y]: number[]) => new Point(x, y)
 
-export function createSegmentation(data: Annotation[]) {
+const defaultOption: CreateSegmentationOptions = {
+  tooltip: false
+}
+export function createSegmentation(
+  data: Annotation[],
+  { tooltip } = defaultOption
+) {
   const colorHash = new ColorHash()
-  // const annotations = new Paper.Group()
-  const annotations: paper.CompoundPath[] = []
-
-  // 어노테이션 생성
-  data.forEach(annotation => {
+  const annotations: paper.Group[] = data.map(annotation => {
     const compoundPath = new Paper.CompoundPath('')
-    const segmentation = annotation.segmentation
-    const pathes = segmentation.map(polygons => {
+    const pathes = annotation.segmentation.map(polygons => {
       const path = new Paper.Path()
       const points = pipe(chunk(2), map(toPoint))(polygons)
       path.add(...points)
@@ -30,21 +32,25 @@ export function createSegmentation(data: Annotation[]) {
       colorHash.hex(annotation.id.toString())
     )
 
-    // // 세그먼테이션에 마우스 올리면 카테고리 표시
-    // compoundPath.onMouseMove = function({ point }: paper.MouseEvent) {
-    //   removeTooltip(this)
+    const segmentation = new Paper.Group([compoundPath])
 
-    //   const categoryName = categories[annotation.category_id - 1].name
-    //   const tooltip = createTooltip(categoryName, point)
-    //   this.parent.addChild(tooltip)
-    // }
-    // // 마우스 떼면 카테고리 표시 제거
-    // compoundPath.onMouseLeave = function() {
-    //   removeTooltip(this)
-    // }
+    if (tooltip) {
+      // 세그먼테이션에 마우스 올리면 카테고리 표시
+      compoundPath.onMouseMove = function({ point }: paper.MouseEvent) {
+        removeTooltip(this)
 
-    // annotations.addChild(compoundPath)
-    annotations.push(compoundPath)
+        const categoryName = categories[annotation.category_id - 1].name
+        const tooltip = createTooltip(categoryName, point)
+        this.parent.addChild(tooltip)
+      }
+      // 마우스 떼면 카테고리 표시 제거
+      compoundPath.onMouseLeave = function() {
+        removeTooltip(this)
+      }
+
+      segmentation.addChild(compoundPath)
+    }
+    return segmentation
   })
 
   return annotations

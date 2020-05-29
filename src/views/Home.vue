@@ -29,7 +29,7 @@ import coco from '@/assets/coco1.json'
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
-  segmentation: paper.CompoundPath[] = []
+  segmentation: paper.Group[] = []
   tool: paper.Tool | null = null
   bbox: paper.Group[] = []
   userBBox: paper.Path[] = []
