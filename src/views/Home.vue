@@ -1,26 +1,29 @@
-<template>
-  <div>
-    <canvas width="300" height="300" id="canvas"></canvas>
-
-    <div>
-      <button @click="showBBox">Show BBox</button>
-      <button @click="showSegmentation">Show Segmentation</button>
-      <button @click="hideAnnotation">Hide All</button>
-      <button @click="useBBoxDrawTool">Draw BBox</button>
-      <button @click="useBBoxEditTool">Edit BBox</button>
-      <button @click="useSegmentationDrawTool">Draw Segmentation</button>
-      <button @click="useSegmentationEditTool">Edit Segmentation</button>
-      <button @click="removeTool">Remove Tool</button>
-    </div>
-  </div>
+<template lang="pug">
+div
+  v-btn-toggle
+    v-btn(@click='showBBox') BBox 보기
+    v-btn(@click='useBBoxDrawTool') BBox 그리기
+    v-btn(@click='useBBoxEditTool') BBox 수정
+    v-btn(@click='hideAnnotation') BBox 숨기기
+  v-btn-toggle
+    v-btn(@click='showSegmentation') Segmentation 보기
+    v-btn(@click='useSegmentationDrawTool') Segmentation 그리기
+    v-btn(@click='useSegmentationEditTool') Segmentation 수정
+    v-btn(@click='hideAnnotation') Segmentation 숨기기
+  v-btn-toggle
+    v-btn(@click='removeTool') Remove Tool
+    v-btn(@click='resetZoom') Reset Zoom
+  br
+  canvas#canvas(width='300', height='300' @wheel="onWheel")
 </template>
 
 <script lang="ts">
 import Paper from 'paper'
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Component, Vue } from 'vue-property-decorator'
 import { Coco } from '@/models/datasets'
 import { UserAction } from '@/models/user'
-import { createBBox, createSegmentation, createImage } from '@/utils'
+import { zoomOnWheel, resetZoom } from '@/utils'
+import { createBBox, createSegmentation, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
 import coco from '@/assets/coco1.json'
@@ -35,28 +38,32 @@ export default class Home extends Vue {
   userBBox: paper.Path[] = []
   userSegmentation: paper.CompoundPath[] = []
   userActions: UserAction[] = []
-
-  @Prop() private msg!: string
+  onWheel = zoomOnWheel
 
   showBBox() {
     if (this.bbox.length) return
-    this.bbox = createBBox(this.coco.annotations, { category: false })
+    this.bbox = createBBox(this.coco.annotations, { category: true })
   }
 
   showSegmentation() {
     if (this.segmentation.length) return
-    this.segmentation = createSegmentation(this.coco.annotations)
+    this.segmentation = createSegmentation(this.coco.annotations, {
+      tooltip: true
+    })
   }
 
   hideAnnotation() {
-    if (this.bbox.length) {
-      this.bbox.forEach(b => b.remove())
-      this.bbox = []
+    const remove = (items: paper.Item[]) => {
+      if (!items.length) return
+      items.forEach(b => b.remove())
+      items = []
     }
-    if (this.segmentation.length) {
-      this.segmentation.forEach(s => s.remove())
-      this.segmentation = []
-    }
+
+    remove(this.bbox)
+    remove(this.segmentation)
+    remove(this.userBBox)
+    remove(this.userSegmentation)
+    this.removeTool()
   }
 
   useSegmentationDrawTool() {
@@ -92,6 +99,11 @@ export default class Home extends Vue {
       this.tool.remove()
       this.tool = null
     }
+  }
+
+  resetZoom() {
+    const { width, height } = this.coco.image
+    resetZoom(new Paper.Point(width / 2, height / 2))
   }
 
   async mounted() {

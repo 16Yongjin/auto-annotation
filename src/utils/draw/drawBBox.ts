@@ -15,7 +15,6 @@ export function createBBoxDrawTool(onDrawEnd: Function) {
   const tool = new Paper.Tool()
 
   let boxColor = Paper.Color.random()
-  const origin = new Paper.Point(0, 0)
   let box: paper.Path.Rectangle | null = null
 
   tool.onMouseDown = function({ downPoint, point }: paper.ToolEvent) {

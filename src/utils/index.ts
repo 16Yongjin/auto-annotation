@@ -1,8 +1,7 @@
 export { createTooltip } from './tooltip'
 export { categories } from './categories'
-export { createBBox } from './bbox'
-export { createSegmentation } from './segmentation'
-export { createImage } from './image'
+export { createSegmentation, createBBox, createImage } from './show'
+export { zoomOnWheel, resetZoom } from './zoom'
 
 function hashCode(str: string) {
   let hash = 0

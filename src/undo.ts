@@ -1,8 +1,8 @@
 interface UndoActionArgs {
-  name: string
-  action: string
-  func: Function
-  args: string[]
+  name: string;
+  action: string;
+  func: Function;
+  args: string[];
 }
 
 export default class UndoAction {
