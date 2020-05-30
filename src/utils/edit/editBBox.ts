@@ -16,10 +16,15 @@ export function createBBoxEditTool(onEdit: Function) {
   tool.onMouseDown = function(event: paper.MouseEvent) {
     const hitResult = Paper.project.hitTest(event.point, hitOptions)
 
+    if (!hitResult) return
+
     if (hitResult.type === 'stroke') {
       bbox = hitResult.item as paper.Path.Rectangle
       bbox.data.state = 'moving'
-      bbox.data.prevPosition = bbox.position.clone()
+      bbox.data.prevPositions = [
+        ...(bbox.data.prevPositions || []),
+        bbox.position.clone()
+      ]
     } else if (hitResult.type === 'segment') {
       const segment = hitResult.segment
       bbox = segment.path
@@ -28,6 +33,10 @@ export function createBBoxEditTool(onEdit: Function) {
       const opposite = (index + 2) % 4
 
       bbox.data.state = 'resizing'
+      bbox.data.prevBoundsList = [
+        ...(bbox.data.prevBoundsList || []),
+        bbox.bounds.clone()
+      ]
       bbox.data.from = bbox.segments[opposite].point.clone()
     }
   }
@@ -40,16 +49,6 @@ export function createBBoxEditTool(onEdit: Function) {
       const bounds = new Paper.Rectangle(bbox.data.from, point)
 
       if (bounds.area <= 0) return
-
-      const oldBound = bbox.bounds.clone()
-
-      onEdit({
-        item: bbox,
-        name: 'resizeBBox',
-        undo: () => {
-          if (bbox) bbox.bounds = oldBound
-        }
-      })
 
       bbox.bounds = bounds
     }
@@ -66,15 +65,29 @@ export function createBBoxEditTool(onEdit: Function) {
   tool.onMouseUp = function() {
     if (!bbox) return
 
-    onEdit({
-      item: bbox,
-      name: 'moveBBox',
-      undo: function() {
-        if (this.item) {
-          this.item.position = this.item.data.prevPosition
+    if (bbox.data.state === 'moving') {
+      onEdit({
+        item: bbox,
+        name: 'moveBBox',
+        undo: function() {
+          if (!this.item || !this.item.data.prevPositions) return
+
+          const prevPosition = this.item.data.prevPositions.pop()
+          this.item.position = prevPosition
         }
-      }
-    })
+      })
+    } else if (bbox.data.state === 'resizing') {
+      onEdit({
+        item: bbox,
+        name: 'resizeBBox',
+        undo: function() {
+          if (!this.item || !this.item.data.prevBoundsList) return
+
+          const prevBounds = this.item.data.prevBoundsList.pop()
+          this.item.bounds = prevBounds
+        }
+      })
+    }
 
     bbox = null
   }
