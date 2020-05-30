@@ -6,7 +6,7 @@ const hitOptions = {
   tolerance: 3
 }
 
-export function createBBoxEditTool() {
+export function createBBoxEditTool(onEdit: Function) {
   Paper.settings.handleSize = 8
 
   const tool = new Paper.Tool()
@@ -19,6 +19,7 @@ export function createBBoxEditTool() {
     if (hitResult.type === 'stroke') {
       bbox = hitResult.item as paper.Path.Rectangle
       bbox.data.state = 'moving'
+      bbox.data.prevPosition = bbox.position.clone()
     } else if (hitResult.type === 'segment') {
       const segment = hitResult.segment
       bbox = segment.path
@@ -40,6 +41,16 @@ export function createBBoxEditTool() {
 
       if (bounds.area <= 0) return
 
+      const oldBound = bbox.bounds.clone()
+
+      onEdit({
+        item: bbox,
+        name: 'resizeBBox',
+        undo: () => {
+          if (bbox) bbox.bounds = oldBound
+        }
+      })
+
       bbox.bounds = bounds
     }
   }
@@ -53,6 +64,18 @@ export function createBBoxEditTool() {
   }
 
   tool.onMouseUp = function() {
+    if (!bbox) return
+
+    onEdit({
+      item: bbox,
+      name: 'moveBBox',
+      undo: function() {
+        if (this.item) {
+          this.item.position = this.item.data.prevPosition
+        }
+      }
+    })
+
     bbox = null
   }
 

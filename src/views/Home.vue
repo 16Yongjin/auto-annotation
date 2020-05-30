@@ -42,14 +42,12 @@ export default class Home extends Vue {
 
   showBBox() {
     if (this.bbox.length) return
-    this.bbox = createBBox(this.coco.annotations, { category: true })
+    this.bbox = createBBox(this.coco.annotations)
   }
 
   showSegmentation() {
     if (this.segmentation.length) return
-    this.segmentation = createSegmentation(this.coco.annotations, {
-      tooltip: true
-    })
+    this.segmentation = createSegmentation(this.coco.annotations)
   }
 
   hideAnnotation() {
@@ -71,7 +69,13 @@ export default class Home extends Vue {
     this.tool = createSegmentationDrawTool(
       (segmentation: paper.CompoundPath) => {
         this.userSegmentation.push(segmentation)
-        this.userActions.push({ name: 'addSegmentation', item: segmentation })
+        this.userActions.push({
+          name: 'addSegmentation',
+          item: segmentation,
+          undo: () => {
+            segmentation.remove()
+          }
+        })
       }
     )
   }
@@ -85,13 +89,23 @@ export default class Home extends Vue {
     this.removeTool()
     this.tool = createBBoxDrawTool((bbox: paper.Path.Rectangle) => {
       this.userBBox.push(bbox)
-      this.userActions.push({ name: 'addBBox', item: bbox })
+      this.userActions.push({
+        name: 'addBBox',
+        item: bbox,
+        undo: () => {
+          bbox.remove()
+        }
+      })
     })
   }
 
   useBBoxEditTool() {
     this.removeTool()
-    this.tool = createBBoxEditTool()
+    this.tool = createBBoxEditTool((userAction: UserAction) => {
+      console.log(userAction)
+
+      this.userActions.push(userAction)
+    })
   }
 
   removeTool() {
@@ -127,7 +141,7 @@ export default class Home extends Vue {
   undo() {
     const userAction = this.userActions.pop()
 
-    if (userAction) userAction.item.remove()
+    if (userAction) userAction.undo()
   }
 }
 </script>
