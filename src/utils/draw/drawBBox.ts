@@ -1,3 +1,4 @@
+import { UserAction } from './../../models/user'
 import Paper from 'paper'
 
 function drawBox(start: paper.Point, end: paper.Point, color: paper.Color) {
@@ -33,7 +34,17 @@ export function createBBoxDrawTool(onDrawEnd: Function) {
     console.log(box.bounds.area)
 
     if (minimumBBoxSize(box)) {
-      onDrawEnd(box)
+      const userAction: UserAction = {
+        name: 'addBBox',
+        item: box,
+        undo: function() {
+          this.item.remove()
+        },
+        redo: function() {
+          Paper.project.activeLayer.addChild(this.item)
+        }
+      }
+      onDrawEnd(userAction)
       box = null
     } else {
       box.remove()

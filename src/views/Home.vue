@@ -38,6 +38,7 @@ export default class Home extends Vue {
   userBBox: paper.Path[] = []
   userSegmentation: paper.CompoundPath[] = []
   userActions: UserAction[] = []
+  redoActions: UserAction[] = []
   onWheel = zoomOnWheel
 
   showBBox() {
@@ -66,45 +67,37 @@ export default class Home extends Vue {
 
   useSegmentationDrawTool() {
     this.removeTool()
-    this.tool = createSegmentationDrawTool(
-      (segmentation: paper.CompoundPath) => {
-        this.userSegmentation.push(segmentation)
-        this.userActions.push({
-          name: 'addSegmentation',
-          item: segmentation,
-          undo: () => {
-            segmentation.remove()
-          }
-        })
-      }
-    )
+    this.tool = createSegmentationDrawTool((userAction: UserAction) => {
+      this.userSegmentation.push(userAction.item as paper.CompoundPath)
+      this.userActions.push(userAction)
+      this.redoActions = []
+    })
   }
 
   useSegmentationEditTool() {
     this.removeTool()
-    this.tool = createSegmentationEditTool()
+    this.tool = createSegmentationEditTool((userAction: UserAction) => {
+      console.log(userAction)
+
+      this.userActions.push(userAction)
+      this.redoActions = []
+    })
   }
 
   useBBoxDrawTool() {
     this.removeTool()
-    this.tool = createBBoxDrawTool((bbox: paper.Path.Rectangle) => {
-      this.userBBox.push(bbox)
-      this.userActions.push({
-        name: 'addBBox',
-        item: bbox,
-        undo: () => {
-          bbox.remove()
-        }
-      })
+    this.tool = createBBoxDrawTool((userAction: UserAction) => {
+      this.userBBox.push(userAction.item as paper.Path.Rectangle)
+      this.userActions.push(userAction)
+      this.redoActions = []
     })
   }
 
   useBBoxEditTool() {
     this.removeTool()
     this.tool = createBBoxEditTool((userAction: UserAction) => {
-      console.log(userAction)
-
       this.userActions.push(userAction)
+      this.redoActions = []
     })
   }
 
@@ -131,17 +124,32 @@ export default class Home extends Vue {
 
     window.addEventListener('keydown', e => this.keyHandler(e))
 
-    this.useBBoxDrawTool()
+    this.showSegmentation()
+    this.useSegmentationEditTool()
   }
 
   keyHandler(e: KeyboardEvent) {
-    if (e.ctrlKey && e.key === 'z') this.undo()
+    if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+      e.shiftKey ? this.redo() : this.undo()
+    }
   }
 
   undo() {
     const userAction = this.userActions.pop()
 
-    if (userAction) userAction.undo()
+    if (!userAction) return
+
+    userAction.undo()
+    this.redoActions.push(userAction)
+  }
+
+  redo() {
+    const redoAction = this.redoActions.pop()
+
+    if (!redoAction) return
+
+    redoAction.redo()
+    this.userActions.push(redoAction)
   }
 }
 </script>

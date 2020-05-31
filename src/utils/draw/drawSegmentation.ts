@@ -1,3 +1,4 @@
+import { UserAction } from './../../models/user'
 import Paper from 'paper'
 
 function drawSegmentation(path: paper.Path) {
@@ -35,7 +36,18 @@ export function createSegmentationDrawTool(onDrawEnd: Function) {
     if (path.length > 30) {
       console.log('hi')
       const compoundPath = drawSegmentation(path)
-      onDrawEnd(compoundPath)
+
+      const userAction: UserAction = {
+        name: 'addSegmentation',
+        item: compoundPath,
+        undo: function() {
+          this.item.remove()
+        },
+        redo: function() {
+          Paper.project.activeLayer.addChild(this.item)
+        }
+      }
+      onDrawEnd(userAction)
     }
     path.remove()
     path = null
