@@ -1,5 +1,5 @@
-import { UserAction } from './../../models/user'
 import Paper from 'paper'
+import { OnAction, DrawActoin } from '@/models/user/actions'
 
 function drawBox(start: paper.Point, end: paper.Point, color: paper.Color) {
   const boxRect = new Paper.Rectangle(start, end)
@@ -12,7 +12,7 @@ function drawBox(start: paper.Point, end: paper.Point, color: paper.Color) {
 const minimumBBoxSize = (box: paper.Path.Rectangle) =>
   box.bounds.width >= 5 && box.bounds.height >= 5
 
-export function createBBoxDrawTool(onDrawEnd: Function) {
+export function createBBoxDrawTool(onDrawEnd: OnAction) {
   const tool = new Paper.Tool()
 
   let boxColor = Paper.Color.random()
@@ -31,20 +31,12 @@ export function createBBoxDrawTool(onDrawEnd: Function) {
   tool.onMouseUp = function({ downPoint, point }: paper.ToolEvent) {
     if (box) box.remove()
     box = drawBox(downPoint, point, boxColor)
-    console.log(box.bounds.area)
 
     if (minimumBBoxSize(box)) {
-      const userAction: UserAction = {
-        name: 'addBBox',
-        item: box,
-        undo: function() {
-          this.item.remove()
-        },
-        redo: function() {
-          Paper.project.activeLayer.addChild(this.item)
-        }
-      }
+      const userAction = new DrawActoin(box)
+
       onDrawEnd(userAction)
+
       box = null
     } else {
       box.remove()

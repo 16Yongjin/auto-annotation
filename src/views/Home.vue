@@ -21,7 +21,7 @@ div
 import Paper from 'paper'
 import { Component, Vue } from 'vue-property-decorator'
 import { Coco } from '@/models/datasets'
-import { UserAction } from '@/models/user'
+import { UserAction } from '@/models/user/actions'
 import { zoomOnWheel, resetZoom } from '@/utils'
 import { createBBox, createSegmentation, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
@@ -69,18 +69,14 @@ export default class Home extends Vue {
     this.removeTool()
     this.tool = createSegmentationDrawTool((userAction: UserAction) => {
       this.userSegmentation.push(userAction.item as paper.CompoundPath)
-      this.userActions.push(userAction)
-      this.redoActions = []
+      this.addUserAction(userAction)
     })
   }
 
   useSegmentationEditTool() {
     this.removeTool()
     this.tool = createSegmentationEditTool((userAction: UserAction) => {
-      console.log(userAction)
-
-      this.userActions.push(userAction)
-      this.redoActions = []
+      this.addUserAction(userAction)
     })
   }
 
@@ -88,16 +84,14 @@ export default class Home extends Vue {
     this.removeTool()
     this.tool = createBBoxDrawTool((userAction: UserAction) => {
       this.userBBox.push(userAction.item as paper.Path.Rectangle)
-      this.userActions.push(userAction)
-      this.redoActions = []
+      this.addUserAction(userAction)
     })
   }
 
   useBBoxEditTool() {
     this.removeTool()
     this.tool = createBBoxEditTool((userAction: UserAction) => {
-      this.userActions.push(userAction)
-      this.redoActions = []
+      this.addUserAction(userAction)
     })
   }
 
@@ -144,12 +138,17 @@ export default class Home extends Vue {
   }
 
   redo() {
-    const redoAction = this.redoActions.pop()
+    const userAction = this.redoActions.pop()
 
-    if (!redoAction) return
+    if (!userAction) return
 
-    redoAction.redo()
-    this.userActions.push(redoAction)
+    userAction.redo()
+    this.userActions.push(userAction)
+  }
+
+  addUserAction(userAction: UserAction) {
+    this.userActions.push(userAction)
+    this.redoActions = []
   }
 }
 </script>

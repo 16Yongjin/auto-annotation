@@ -1,5 +1,11 @@
-import { OnEdit } from '@/models/user'
 import Paper from 'paper'
+import {
+  OnAction,
+  AddSegmentAction,
+  RemoveSegmentAction,
+  MoveSegmentAction,
+  MovePathAction
+} from '@/models/user/actions'
 
 const hitOptions = {
   segments: true,
@@ -8,7 +14,7 @@ const hitOptions = {
   tolerance: 3
 }
 
-export function createSegmentationEditTool(onEdit: OnEdit) {
+export function createSegmentationEditTool(onEdit: OnAction) {
   Paper.settings.handleSize = 6
 
   const tool = new Paper.Tool()
@@ -33,22 +39,7 @@ export function createSegmentationEditTool(onEdit: OnEdit) {
         const index = segment.index
         const path = segment.path
 
-        // 세그먼트 제거 이벤트 발생
-        // undo - Path에 세그먼트 다시 추가
-        // redo - Path에서 세그먼트 제거
-        const editAction = {
-          name: 'removeSegment',
-          item: path,
-          from: segment,
-          to: segment,
-          undo: function() {
-            const path = this.item as paper.Path
-            path.insertSegments(index, [this.from])
-          },
-          redo: function() {
-            this.to.remove()
-          }
-        }
+        const editAction = new RemoveSegmentAction(path, segment, index)
 
         onEdit(editAction)
 
@@ -71,22 +62,7 @@ export function createSegmentationEditTool(onEdit: OnEdit) {
       segment = path.insert(index, event.point)
       segmentPosition = segment.point.clone()
 
-      // 세그먼트 생성 이벤트 발생
-      // undo - 세그먼트 제거
-      // redo - 세그먼트 다시 추가
-      const editAction = {
-        name: 'addSegment',
-        item: path,
-        from: segment,
-        to: segment,
-        undo: function() {
-          this.from.remove()
-        },
-        redo: function() {
-          const path = this.item as paper.Path
-          path.insertSegments(index, [this.to])
-        }
-      }
+      const editAction = new AddSegmentAction(path, segment, index)
 
       onEdit(editAction)
     }
@@ -104,42 +80,20 @@ export function createSegmentationEditTool(onEdit: OnEdit) {
     tool.onMouseUp = function() {
       if (segment && path && segmentPosition) {
         // 세그먼트 이동 끝났음
-        const segmentPrevPos = segmentPosition.clone()
-        const segmentNextPos = segment.point.clone()
 
-        // 세그먼트 이동 이벤트 발생
-        // undo - 세그먼트를 원래 위치로 옮김
-        // redo - 세그먼트를 옮겼던 위치로 다시 옮김
-        const editAction = {
-          name: 'moveSegment',
-          item: path,
-          from: segment,
-          to: segment,
-          undo: function() {
-            this.from.point = segmentPrevPos
-          },
-          redo: function() {
-            this.to.point = segmentNextPos
-          }
-        }
+        const editAction = new MoveSegmentAction(
+          segment,
+          segmentPosition.clone(),
+          segment.point.clone()
+        )
 
         onEdit(editAction)
       } else if (path && pathPosition) {
-        // Path 이동 이벤트 발생
-        // undo - Path를 원래 위치로 옮김
-        // redo - Path를 옮겼던 위치로 다시 옮김
-        const editAction = {
-          name: 'movePath',
-          item: path,
-          from: pathPosition,
-          to: path.position.clone(),
-          undo: function() {
-            this.item.position = this.from
-          },
-          redo: function() {
-            this.item.position = this.to
-          }
-        }
+        const editAction = new MovePathAction(
+          path,
+          pathPosition,
+          path.position.clone()
+        )
 
         onEdit(editAction)
       }

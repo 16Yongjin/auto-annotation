@@ -1,5 +1,9 @@
-import { OnEdit } from '@/models/user'
 import Paper from 'paper'
+import {
+  OnAction,
+  ResizeBBoxAction,
+  MoveBBoxAction
+} from '@/models/user/actions'
 
 const hitOptions = {
   segments: true,
@@ -7,7 +11,7 @@ const hitOptions = {
   tolerance: 3
 }
 
-export function createBBoxEditTool(onEdit: OnEdit) {
+export function createBBoxEditTool(onEdit: OnAction) {
   Paper.settings.handleSize = 8
 
   const tool = new Paper.Tool()
@@ -60,39 +64,11 @@ export function createBBoxEditTool(onEdit: OnEdit) {
     if (!bbox) return
 
     if (bbox.data.state === 'moving') {
-      // BBox 이동 이벤트 발생
-      // undo - bbox를 원래 위치로 이동
-      // redo - bbox를 옮겼던 위치로 재이동
-      const editAction = {
-        item: bbox,
-        name: 'moveBBox',
-        from: bbox.data.prevPosition.clone(),
-        to: bbox.position.clone(),
-        undo: function() {
-          if (this.item) this.item.position = this.from
-        },
-        redo: function() {
-          if (this.item) this.item.position = this.to
-        }
-      }
+      const editAction = new MoveBBoxAction(bbox)
 
       onEdit(editAction)
     } else if (bbox.data.state === 'resizing') {
-      // BBox 크기 조절 이벤트 발생
-      // undo - 원래 크기로 조절
-      // redo - 조절했던 크기로 다시 조절
-      const editAction = {
-        item: bbox,
-        name: 'resizeBBox',
-        from: bbox.data.prevBounds.clone(),
-        to: bbox.bounds.clone(),
-        undo: function() {
-          if (this.item) this.item.bounds = this.from
-        },
-        redo: function() {
-          if (this.item) this.item.bounds = this.to
-        }
-      }
+      const editAction = new ResizeBBoxAction(bbox)
 
       onEdit(editAction)
     }
