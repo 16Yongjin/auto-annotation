@@ -19,11 +19,11 @@ export function zoomOnWheel(e: WheelEvent) {
 
   if (e.ctrlKey) {
     // Pan up and down
-    const delta = new Point(0, 2 * e.deltaY)
+    const delta = new Point(0, 5 * e.deltaY)
     view.center = view.center.add(delta)
   } else if (e.shiftKey) {
     // Pan left and right
-    const delta = new Point(2 * e.deltaY, 0)
+    const delta = new Point(5 * e.deltaY, 0)
     view.center = view.center.add(delta)
   } else {
     const viewPosition = view.viewToProject(new Point(e.offsetX, e.offsetY))

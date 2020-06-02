@@ -1,5 +1,5 @@
 <template lang="pug">
-div
+div.h100
   v-btn-toggle
     v-btn(@click='showBBox') BBox 보기
     v-btn(@click='useBBoxDrawTool') BBox 그리기
@@ -13,8 +13,24 @@ div
   v-btn-toggle
     v-btn(@click='removeTool') Remove Tool
     v-btn(@click='resetZoom') Reset Zoom
-  br
-  canvas#canvas(width='300', height='300' @wheel="onWheel")
+
+  v-container(fluid)
+    v-row
+      v-col.canvas-view(cols="9")
+        canvas#canvas(@wheel="onWheel" resize="true")
+          v-card-text hi
+      v-col(cols="3")
+        v-card
+          v-card-title Label
+          v-card-text.pb-0
+            v-text-field(outlined single-line hide-details label="레이블 입력")
+          v-card-actions
+            v-btn(text) Clear
+            v-spacer
+            v-btn(text color="primary") Ok
+
+        annotation-list(:annotations='annotations')
+
 </template>
 
 <script lang="ts">
@@ -26,9 +42,10 @@ import { zoomOnWheel, resetZoom } from '@/utils'
 import { createBBox, createSegmentation, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
+import AnnotationList from '@/components/AnnotationList.vue'
 import coco from '@/assets/coco1.json'
 
-@Component({ name: 'Home' })
+@Component({ name: 'Home', components: { AnnotationList } })
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
@@ -41,6 +58,12 @@ export default class Home extends Vue {
   redoActions: UserAction[] = []
   onWheel = zoomOnWheel
 
+  get annotations() {
+    return this.userBBox
+      .filter(s => s.isInserted())
+      .map(s => ({ name: 'tt', annotation: s }))
+  }
+
   showBBox() {
     if (this.bbox.length) return
     this.bbox = createBBox(this.coco.annotations)
@@ -52,16 +75,18 @@ export default class Home extends Vue {
   }
 
   hideAnnotation() {
-    const remove = (items: paper.Item[]) => {
-      if (!items.length) return
-      items.forEach(b => b.remove())
-      items = []
-    }
+    this.bbox.forEach(i => i.remove())
+    this.bbox = []
 
-    remove(this.bbox)
-    remove(this.segmentation)
-    remove(this.userBBox)
-    remove(this.userSegmentation)
+    this.segmentation.forEach(i => i.remove())
+    this.segmentation = []
+
+    this.userBBox.forEach(i => i.remove())
+    this.userBBox = []
+
+    this.userSegmentation.forEach(i => i.remove())
+    this.userSegmentation = []
+
     this.removeTool()
   }
 
@@ -98,8 +123,8 @@ export default class Home extends Vue {
   removeTool() {
     if (this.tool) {
       this.tool.remove()
-      this.tool = null
     }
+    this.tool = null
   }
 
   resetZoom() {
@@ -118,8 +143,7 @@ export default class Home extends Vue {
 
     window.addEventListener('keydown', e => this.keyHandler(e))
 
-    this.showSegmentation()
-    this.useSegmentationEditTool()
+    this.useBBoxDrawTool()
   }
 
   keyHandler(e: KeyboardEvent) {
@@ -153,4 +177,19 @@ export default class Home extends Vue {
 }
 </script>
 
-<style></style>
+<style>
+#canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.h100 {
+  height: 100%;
+}
+
+.canvas-view {
+  background: grey;
+  height: calc(100vh - 48px);
+  padding: 0;
+}
+</style>
