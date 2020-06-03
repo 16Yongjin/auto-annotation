@@ -1,5 +1,13 @@
 <template lang="pug">
-div.h100
+div.h100.rel
+  v-container.pt-0(fluid)
+    v-row
+      v-col.canvas-view(cols='9')
+        canvas#canvas(@wheel='onWheel' resize='true')
+      v-col(cols='3')
+        annotation-list(:annotations='annotations' @select="onAnnotationSelect")
+  label-modal(v-if="selectedBBox" :bbox='selectedBBox' @ok="onLabelEdit")
+
   v-btn-toggle
     v-btn(@click='showBBox') BBox 보기
     v-btn(@click='useBBoxDrawTool') BBox 그리기
@@ -14,23 +22,6 @@ div.h100
     v-btn(@click='removeTool') Remove Tool
     v-btn(@click='resetZoom') Reset Zoom
 
-  v-container(fluid)
-    v-row
-      v-col.canvas-view(cols="9")
-        canvas#canvas(@wheel="onWheel" resize="true")
-          v-card-text hi
-      v-col(cols="3")
-        v-card
-          v-card-title Label
-          v-card-text.pb-0
-            v-text-field(outlined single-line hide-details label="레이블 입력")
-          v-card-actions
-            v-btn(text) Clear
-            v-spacer
-            v-btn(text color="primary") Ok
-
-        annotation-list(:annotations='annotations')
-
 </template>
 
 <script lang="ts">
@@ -43,25 +34,26 @@ import { createBBox, createSegmentation, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
 import AnnotationList from '@/components/AnnotationList.vue'
+import LabelModal from '@/components/LabelModal.vue'
 import coco from '@/assets/coco1.json'
+import { BBox } from '@/models/user/annotation'
 
-@Component({ name: 'Home', components: { AnnotationList } })
+@Component({ name: 'Home', components: { AnnotationList, LabelModal } })
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
   segmentation: paper.Group[] = []
   tool: paper.Tool | null = null
   bbox: paper.Group[] = []
-  userBBox: paper.Path[] = []
+  userBBox: BBox[] = []
   userSegmentation: paper.CompoundPath[] = []
   userActions: UserAction[] = []
   redoActions: UserAction[] = []
   onWheel = zoomOnWheel
+  selectedBBox: BBox | null = null
 
   get annotations() {
-    return this.userBBox
-      .filter(s => s.isInserted())
-      .map(s => ({ name: 'tt', annotation: s }))
+    return this.userBBox.filter(b => b.bbox.isInserted())
   }
 
   showBBox() {
@@ -81,11 +73,13 @@ export default class Home extends Vue {
     this.segmentation.forEach(i => i.remove())
     this.segmentation = []
 
-    this.userBBox.forEach(i => i.remove())
+    this.userBBox.forEach(i => i.bbox.remove())
     this.userBBox = []
 
     this.userSegmentation.forEach(i => i.remove())
     this.userSegmentation = []
+
+    this.selectedBBox = null
 
     this.removeTool()
   }
@@ -108,8 +102,12 @@ export default class Home extends Vue {
   useBBoxDrawTool() {
     this.removeTool()
     this.tool = createBBoxDrawTool((userAction: UserAction) => {
-      this.userBBox.push(userAction.item as paper.Path.Rectangle)
       this.addUserAction(userAction)
+
+      const bbox = userAction.item as paper.Path.Rectangle
+      const userBBox = { bbox, label: 'untitled' }
+      this.userBBox.push(userBBox)
+      this.selectedBBox = userBBox
     })
   }
 
@@ -139,7 +137,24 @@ export default class Home extends Vue {
 
     Paper.setup(this.canvas)
 
-    createImage(this.coco.image)
+    Paper.settings.handleSize = 8
+
+    // createImage(this.coco.image)
+
+    createImage({
+      license: 1,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      file_name: '',
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      coco_url: require('@/assets/image.jpg'),
+      height: 1,
+      width: 1,
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      date_captured: '',
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      flickr_url: '',
+      id: 1
+    })
 
     window.addEventListener('keydown', e => this.keyHandler(e))
 
@@ -174,6 +189,17 @@ export default class Home extends Vue {
     this.userActions.push(userAction)
     this.redoActions = []
   }
+
+  onLabelEdit() {
+    this.selectedBBox = null
+  }
+
+  onAnnotationSelect(annotation: BBox) {
+    this.selectedBBox = null
+    this.$nextTick(() => {
+      this.selectedBBox = annotation
+    })
+  }
 }
 </script>
 
@@ -185,6 +211,10 @@ export default class Home extends Vue {
 
 .h100 {
   height: 100%;
+}
+
+.rel {
+  position: relative;
 }
 
 .canvas-view {
