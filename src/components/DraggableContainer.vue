@@ -1,5 +1,5 @@
 <template lang="pug">
-#draggable-container(ref='draggableContainer', @mousedown='dragMouseDown')
+#draggable-container(ref='draggableContainer' @mousedown='dragMouseDown')
   slot
 </template>
 

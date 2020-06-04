@@ -1,27 +1,41 @@
 <template lang="pug">
 div.h100.rel
-  v-container.pt-0(fluid)
+  v-app-bar(app dense color='white')
+
+    v-btn(text @click='showBBox')
+      v-icon fas fa-mask
+    v-btn(text @click='useBBoxDrawTool')
+      v-icon fas fa-vector-square
+    v-btn(text @click='useBBoxEditTool')
+      v-icon fas fa-edit
+    v-btn(text @click='hideAnnotation')
+      v-icon fas fa-eye-slash
+
+    v-spacer
+
+    v-btn(text @click='showSegmentation')
+      v-icon fas fa-mask
+    v-btn(text @click='useSegmentationDrawTool')
+      v-icon fas fa-pen-nib
+    v-btn(text @click='useSegmentationEditTool')
+      v-icon fas fa-edit
+    v-btn(text @click='hideAnnotation')
+      v-icon fas fa-eye-slash
+
+    v-spacer
+
+    v-btn(text @click='removeTool')
+      v-icon fas fa-trash-alt
+    v-btn(text @click='resetZoom')
+      v-icon fas fa-search-plus
+
+  v-container.pa-0(fluid)
     v-row
       v-col.canvas-view(cols='9')
         canvas#canvas(@wheel='onWheel' resize='true')
-      v-col(cols='3')
-        annotation-list(:annotations='annotations' @select="onAnnotationSelect")
-  label-modal(v-if="selectedBBox" :bbox='selectedBBox' @ok="onLabelEdit")
-
-  v-btn-toggle
-    v-btn(@click='showBBox') BBox 보기
-    v-btn(@click='useBBoxDrawTool') BBox 그리기
-    v-btn(@click='useBBoxEditTool') BBox 수정
-    v-btn(@click='hideAnnotation') BBox 숨기기
-  v-btn-toggle
-    v-btn(@click='showSegmentation') Segmentation 보기
-    v-btn(@click='useSegmentationDrawTool') Segmentation 그리기
-    v-btn(@click='useSegmentationEditTool') Segmentation 수정
-    v-btn(@click='hideAnnotation') Segmentation 숨기기
-  v-btn-toggle
-    v-btn(@click='removeTool') Remove Tool
-    v-btn(@click='resetZoom') Reset Zoom
-
+      v-col.pa-0(cols='3')
+        annotation-list(:annotations='annotationList' @select="onAnnotationSelect")
+  label-modal(:annotation='selectedAnnotation' @ok="onLabelEdit")
 </template>
 
 <script lang="ts">
@@ -30,56 +44,48 @@ import { Component, Vue } from 'vue-property-decorator'
 import { Coco } from '@/models/datasets'
 import { UserAction } from '@/models/user/actions'
 import { zoomOnWheel, resetZoom } from '@/utils'
-import { createBBox, createSegmentation, createImage } from '@/utils/show'
+import { createBBoxes, createSegmentations, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
 import coco from '@/assets/coco1.json'
-import { BBox } from '@/models/user/annotation'
+import { Annotation } from '@/models/user/annotation'
 
 @Component({ name: 'Home', components: { AnnotationList, LabelModal } })
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
-  segmentation: paper.Group[] = []
   tool: paper.Tool | null = null
-  bbox: paper.Group[] = []
-  userBBox: BBox[] = []
+  annotations: Annotation[] = []
   userSegmentation: paper.CompoundPath[] = []
   userActions: UserAction[] = []
   redoActions: UserAction[] = []
   onWheel = zoomOnWheel
-  selectedBBox: BBox | null = null
+  selectedAnnotation: Annotation | null = null
 
-  get annotations() {
-    return this.userBBox.filter(b => b.bbox.isInserted())
+  get annotationList() {
+    return this.annotations.filter(b => b.item.isInserted())
   }
 
   showBBox() {
-    if (this.bbox.length) return
-    this.bbox = createBBox(this.coco.annotations)
+    const bboxes = createBBoxes(this.coco.annotations)
+    this.annotations.push(...bboxes)
   }
 
   showSegmentation() {
-    if (this.segmentation.length) return
-    this.segmentation = createSegmentation(this.coco.annotations)
+    const segmentations = createSegmentations(this.coco.annotations)
+    this.annotations.push(...segmentations)
   }
 
   hideAnnotation() {
-    this.bbox.forEach(i => i.remove())
-    this.bbox = []
-
-    this.segmentation.forEach(i => i.remove())
-    this.segmentation = []
-
-    this.userBBox.forEach(i => i.bbox.remove())
-    this.userBBox = []
+    this.annotations.forEach(i => i.item.remove())
+    this.annotations = []
 
     this.userSegmentation.forEach(i => i.remove())
     this.userSegmentation = []
 
-    this.selectedBBox = null
+    this.selectedAnnotation = null
 
     this.removeTool()
   }
@@ -87,8 +93,12 @@ export default class Home extends Vue {
   useSegmentationDrawTool() {
     this.removeTool()
     this.tool = createSegmentationDrawTool((userAction: UserAction) => {
-      this.userSegmentation.push(userAction.item as paper.CompoundPath)
       this.addUserAction(userAction)
+
+      const segmentation = userAction.item as paper.CompoundPath
+      const userSegmentation = { item: segmentation, label: 'untitled' }
+      this.annotations.push(userSegmentation)
+      this.selectedAnnotation = userSegmentation
     })
   }
 
@@ -105,9 +115,9 @@ export default class Home extends Vue {
       this.addUserAction(userAction)
 
       const bbox = userAction.item as paper.Path.Rectangle
-      const userBBox = { bbox, label: 'untitled' }
-      this.userBBox.push(userBBox)
-      this.selectedBBox = userBBox
+      const userBBox = { item: bbox, label: 'untitled' }
+      this.annotations.push(userBBox)
+      this.selectedAnnotation = userBBox
     })
   }
 
@@ -191,13 +201,13 @@ export default class Home extends Vue {
   }
 
   onLabelEdit() {
-    this.selectedBBox = null
+    this.selectedAnnotation = null
   }
 
-  onAnnotationSelect(annotation: BBox) {
-    this.selectedBBox = null
+  onAnnotationSelect(annotation: Annotation) {
+    this.selectedAnnotation = null
     this.$nextTick(() => {
-      this.selectedBBox = annotation
+      this.selectedAnnotation = annotation
     })
   }
 }

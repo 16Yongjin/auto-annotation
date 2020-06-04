@@ -1,6 +1,5 @@
 <template lang="pug">
-draggable-container.label-modal(
-  :style='posStyle')
+draggable-container.label-modal(v-if="showModal" :style='posStyle' ref='modalContainer')
   v-card
     v-card-title Label
     v-card-text.pb-0
@@ -8,7 +7,7 @@ draggable-container.label-modal(
         outlined
         single-line
         hide-details
-        v-model="bbox.label"
+        v-model="annotation.label"
         @keyup.enter="onOk"
         label="레이블 입력"
         ref="labelText")
@@ -22,37 +21,45 @@ draggable-container.label-modal(
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import Paper from 'paper'
 import DraggableContainer from '@/components/DraggableContainer.vue'
-import { BBox } from '@/models/user/annotation'
+import { Annotation } from '@/models/user/annotation'
 
 @Component({ name: 'LabelModal', components: { DraggableContainer } })
 export default class LabelModal extends Vue {
-  @Prop() private bbox!: BBox
+  @Prop() private annotation!: Annotation
+
+  get showModal() {
+    return this.annotation && this.annotation.item.isInserted()
+  }
 
   get posStyle() {
-    if (!this.bbox) return
+    if (!this.annotation) return
 
-    const bboxBounds = this.bbox.bbox.bounds
+    const annotationBounds = this.annotation.item.bounds
     const viewPos = Paper.view.bounds.point
+    const container = this.$refs.modalContainer as Vue
+    const yOffset = container?.$el.clientHeight / 2 || 86
 
-    const { x, y } = bboxBounds.point
+    const { x, y } = annotationBounds.point
       .subtract(viewPos)
-      .add(new Paper.Point(bboxBounds.width, bboxBounds.height / 2))
+      .add(new Paper.Point(annotationBounds.width, annotationBounds.height / 2))
       .multiply(Paper.view.zoom)
 
     return {
-      left: `${x + 10}px`,
-      top: `${y - 86}px`
+      left: `${x}px`,
+      top: `${y - yOffset}px`
     }
   }
 
   mounted() {
+    if (!this.annotation) return
+
     const labelText = this.$refs.labelText as Vue
     const labelInput = labelText.$el.querySelector('input')
     if (labelInput) labelInput.select()
   }
 
   onClear() {
-    this.bbox.bbox.remove()
+    this.annotation.item.remove()
 
     this.$emit('ok')
   }

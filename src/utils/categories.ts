@@ -82,3 +82,6 @@ export const categories: Category[] = [
   { supercategory: 'indoor', id: 89, name: 'hair drier' },
   { supercategory: 'indoor', id: 90, name: 'toothbrush' }
 ]
+
+export const getCategory = (categoryId: number) =>
+  categories[categoryId - 1].name

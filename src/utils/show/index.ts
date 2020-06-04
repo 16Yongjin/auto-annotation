@@ -1,3 +1,3 @@
-export { createBBox } from './bbox'
-export { createSegmentation } from './segmentation'
+export { createBBox, createBBoxes } from './bbox'
+export { createSegmentations } from './segmentation'
 export { createImage } from './image'
