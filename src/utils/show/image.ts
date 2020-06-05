@@ -11,4 +11,6 @@ export function createImage(image: Image) {
 
   raster.position = center
   Paper.view.center = center
+
+  return raster
 }

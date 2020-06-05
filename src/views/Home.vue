@@ -47,6 +47,7 @@ import { zoomOnWheel, resetZoom } from '@/utils'
 import { createBBoxes, createSegmentations, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
+import { detectObject } from '@/utils/detect'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
 import coco from '@/assets/coco1.json'
@@ -56,6 +57,7 @@ import { Annotation } from '@/models/user/annotation'
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
+  image: paper.Raster | null = null
   tool: paper.Tool | null = null
   annotations: Annotation[] = []
   userSegmentation: paper.CompoundPath[] = []
@@ -68,8 +70,11 @@ export default class Home extends Vue {
     return this.annotations.filter(b => b.item.isInserted())
   }
 
-  showBBox() {
-    const bboxes = createBBoxes(this.coco.annotations)
+  async showBBox() {
+    if (!this.image) return
+
+    const predictions = await detectObject(this.image.image as HTMLImageElement)
+    const bboxes = createBBoxes(predictions)
     this.annotations.push(...bboxes)
   }
 
@@ -151,7 +156,7 @@ export default class Home extends Vue {
 
     // createImage(this.coco.image)
 
-    createImage({
+    this.image = createImage({
       license: 1,
       // eslint-disable-next-line @typescript-eslint/camelcase
       file_name: '',

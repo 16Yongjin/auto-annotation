@@ -1,4 +1,6 @@
 import Vue from 'vue'
+import * as tf from '@tensorflow/tfjs'
+import '@tensorflow/tfjs-backend-webgl'
 import App from './App.vue'
 import router from './router'
 import store from './store'
@@ -14,3 +16,5 @@ new Vue({
   vuetify,
   render: h => h(App)
 }).$mount('#app')
+
+tf.setBackend('webgl')
