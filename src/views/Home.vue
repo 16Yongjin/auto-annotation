@@ -10,6 +10,8 @@ div.h100.rel
       v-icon fas fa-edit
     v-btn(text @click='hideAnnotation')
       v-icon fas fa-eye-slash
+    v-btn(text @click='test')
+      v-icon fas fa-person
 
     v-spacer
 
@@ -47,11 +49,11 @@ import { zoomOnWheel, resetZoom } from '@/utils'
 import { createBBoxes, createSegmentations, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
-import { detectObject } from '@/utils/detect'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
 import coco from '@/assets/coco1.json'
 import { Annotation } from '@/models/user/annotation'
+import { ipcRenderer } from 'electron'
 
 @Component({ name: 'Home', components: { AnnotationList, LabelModal } })
 export default class Home extends Vue {
@@ -70,12 +72,20 @@ export default class Home extends Vue {
     return this.annotations.filter(b => b.item.isInserted())
   }
 
+  test() {
+    console.log('test')
+
+    ipcRenderer.send('test', console.log)
+  }
+
   async showBBox() {
     if (!this.image) return
 
-    const predictions = await detectObject(this.image.image as HTMLImageElement)
-    const bboxes = createBBoxes(predictions)
-    this.annotations.push(...bboxes)
+    ipcRenderer.send('detect', this.image.image)
+
+    // const predictions = await detectObject(this.image.image as HTMLImageElement)
+    // const bboxes = createBBoxes(predictions)
+    // this.annotations.push(...bboxes)
   }
 
   showSegmentation() {
@@ -156,7 +166,7 @@ export default class Home extends Vue {
 
     // createImage(this.coco.image)
 
-    this.image = createImage({
+    this.image = await createImage({
       license: 1,
       // eslint-disable-next-line @typescript-eslint/camelcase
       file_name: '',
@@ -172,6 +182,17 @@ export default class Home extends Vue {
     })
 
     window.addEventListener('keydown', e => this.keyHandler(e))
+
+    ipcRenderer.on('test', (event, v) => {
+      console.log('from test', v)
+    })
+
+    ipcRenderer.on('detect', (event, predictions) => {
+      console.log('predictions', predictions)
+
+      const bboxes = createBBoxes(predictions)
+      this.annotations.push(...bboxes)
+    })
 
     this.useBBoxDrawTool()
   }

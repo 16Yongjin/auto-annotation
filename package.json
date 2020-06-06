@@ -16,6 +16,7 @@
     "@fortawesome/fontawesome-free": "^5.8.2",
     "@tensorflow-models/coco-ssd": "^2.0.3",
     "@tensorflow/tfjs": "^2.0.0",
+    "@tensorflow/tfjs-node": "^2.0.0",
     "color-hash": "^1.0.3",
     "core-js": "^3.6.4",
     "epic-spinners": "^1.1.0",

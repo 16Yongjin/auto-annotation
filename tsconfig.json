@@ -28,7 +28,5 @@
   ],
   "exclude": ["node_modules", "*.test.js"],
   "typeRoots": ["./node_modules/@types", "./node_modules/vuetify/types"],
-  "ignoreRules": {
-    "TS2307": true
-  }
+  "strictLibCheck": false
 }

@@ -5,7 +5,11 @@ import {
   createProtocol,
   installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
+import { setup } from '@/electron/index'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
+
+setup()
 
 let win: BrowserWindow | null
 
