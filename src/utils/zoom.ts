@@ -1,6 +1,7 @@
 import Paper, { Point } from 'paper'
 
 const ZOOM_FACTOR = 1.2
+const PAN_FACTOR = 0.5
 
 function changeZoom(delta: number, point: paper.Point) {
   const oldZoom = Paper.view.zoom
@@ -19,11 +20,11 @@ export function zoomOnWheel(e: WheelEvent) {
 
   if (e.ctrlKey) {
     // Pan up and down
-    const delta = new Point(0, e.deltaY)
+    const delta = new Point(0, PAN_FACTOR * e.deltaY)
     view.center = view.center.add(delta)
   } else if (e.shiftKey) {
     // Pan left and right
-    const delta = new Point(e.deltaY, 0)
+    const delta = new Point(PAN_FACTOR * e.deltaY, 0)
     view.center = view.center.add(delta)
   } else {
     const viewPosition = view.viewToProject(new Point(e.offsetX, e.offsetY))

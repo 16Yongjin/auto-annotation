@@ -1,24 +1,18 @@
-import * as tf from '@tensorflow/tfjs'
-import * as tfnode from '@tensorflow/tfjs-node'
+import * as tf from '@tensorflow/tfjs-node'
 import * as cocoSsd from '@tensorflow-models/coco-ssd'
 import { ipcMain } from 'electron'
 import fetch, { Response, RequestInit } from 'node-fetch'
 import fs from 'fs'
 import { promisify } from 'util'
+declare const __static: string
+
 const readFile = promisify(fs.readFile)
-const readdir = promisify(fs.readdir)
 
 const removeProtocol = (url: string) => url.replace(/(^\w+:|^)\/\//, '')
 
-const modelUrl = `file://C:/Users/yongj/dev/vue/auto-annotation/src/electron/cocossd/model.json`
-// https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/group1-shard1of5
-
+// Mock fetch api to support file:// protocol
 // @ts-ignore
-globalThis.fetch = async (url: string, init: RequestInit | undefined) => {
-  console.log(url, init)
-
-  console.log(await readdir('.'))
-
+globalThis.fetch = async (url: string, init?: RequestInit | undefined) => {
   if (!url.startsWith('file://')) {
     return fetch(url, init)
   }
@@ -29,19 +23,17 @@ globalThis.fetch = async (url: string, init: RequestInit | undefined) => {
     url.indexOf('.json') !== -1
       ? 'application/json'
       : 'application/octet-stream'
-
-  return new Response(file, {
-    headers: {
-      'content-type': contentType
-    }
-  })
+  const headers = { 'content-type': contentType }
+  return new Response(file, { headers })
 }
+
+const modelUrl = `file://${__static}/cocossd/model.json`
 
 let model: cocoSsd.ObjectDetection | null = null
 
 export const detectObject = async (dataURL: string) => {
   const buffer = Buffer.from(dataURL.split(',')[1], 'base64')
-  const image = tfnode.node.decodeImage(buffer, 3) as tf.Tensor3D
+  const image = tf.node.decodeImage(buffer, 3) as tf.Tensor3D
 
   if (!model) model = await cocoSsd.load({ modelUrl })
   const predictions = await model.detect(image)
