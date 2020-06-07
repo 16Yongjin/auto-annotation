@@ -45,7 +45,7 @@ import Paper from 'paper'
 import { Component, Vue } from 'vue-property-decorator'
 import { Coco } from '@/models/datasets'
 import { UserAction } from '@/models/user/actions'
-import { zoomOnWheel, resetZoom } from '@/utils'
+import { zoomOnWheel, resetZoom, toDataUrl } from '@/utils'
 import { createBBoxes, createSegmentations, createImage } from '@/utils/show'
 import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
@@ -75,17 +75,15 @@ export default class Home extends Vue {
   test() {
     console.log('test')
 
-    ipcRenderer.send('test', console.log)
+    ipcRenderer.send('test', 'hello')
   }
 
   async showBBox() {
     if (!this.image) return
 
-    ipcRenderer.send('detect', this.image.image)
-
-    // const predictions = await detectObject(this.image.image as HTMLImageElement)
-    // const bboxes = createBBoxes(predictions)
-    // this.annotations.push(...bboxes)
+    const image = this.image.image
+    const dataURL = toDataUrl(image)
+    ipcRenderer.send('detect', dataURL)
   }
 
   showSegmentation() {

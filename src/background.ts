@@ -7,6 +7,8 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 import { setup } from '@/electron/index'
 
+console.log(process.version)
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 setup()
