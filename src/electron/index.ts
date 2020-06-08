@@ -2,11 +2,9 @@ import * as tf from '@tensorflow/tfjs-node'
 import * as cocoSsd from '@tensorflow-models/coco-ssd'
 import { ipcMain } from 'electron'
 import fetch, { Response, RequestInit } from 'node-fetch'
-import fs from 'fs'
-import { promisify } from 'util'
-declare const __static: string
+import { readFile } from 'mz/fs'
 
-const readFile = promisify(fs.readFile)
+declare const __static: string
 
 const removeProtocol = (url: string) => url.replace(/(^\w+:|^)\/\//, '')
 

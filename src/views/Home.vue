@@ -2,6 +2,9 @@
 div.h100.rel
   v-app-bar(app dense color='white')
 
+    v-btn(text @click='openFile')
+      v-icon fas fa-file
+
     v-btn(text @click='showBBox')
       v-icon fas fa-mask
     v-btn(text @click='useBBoxDrawTool')
@@ -38,6 +41,8 @@ div.h100.rel
       v-col.pa-0(cols='3')
         annotation-list(:annotations='annotationList' @select="onAnnotationSelect")
   label-modal(:annotation='selectedAnnotation' @ok="onLabelEdit")
+
+  image-preview-bottom-bar(:images='images')
 </template>
 
 <script lang="ts">
@@ -51,11 +56,16 @@ import { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
+import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import coco from '@/assets/coco1.json'
 import { Annotation } from '@/models/user/annotation'
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, remote } from 'electron'
+import { readdir, readFile } from 'mz/fs'
 
-@Component({ name: 'Home', components: { AnnotationList, LabelModal } })
+@Component({
+  name: 'Home',
+  components: { AnnotationList, LabelModal, ImagePreviewBottomBar }
+})
 export default class Home extends Vue {
   coco: Coco = coco[0]
   canvas: HTMLCanvasElement | null = null
@@ -68,8 +78,54 @@ export default class Home extends Vue {
   onWheel = zoomOnWheel
   selectedAnnotation: Annotation | null = null
 
+  images: string[] = []
+
   get annotationList() {
     return this.annotations.filter(b => b.item.isInserted())
+  }
+
+  async openFile() {
+    const { filePaths, canceled } = await remote.dialog.showOpenDialog({
+      properties: ['openDirectory']
+    })
+
+    const [dirPath] = filePaths
+
+    if (!dirPath || canceled) return
+
+    const fileNames = await readdir(dirPath)
+
+    console.log('dirPath', dirPath.replace(/\\/g, '/'))
+
+    console.log('fileNames', fileNames)
+
+    const imagePaths = fileNames
+      .filter(name => name.match(/\.jpe?g/))
+      .map(name => `${dirPath}/${name}`.replace(/\\/g, '/'))
+      .slice(0, 5)
+
+    console.log('imagePaths', imagePaths)
+
+    const toBase64 = (f: Buffer) =>
+      `data:image/png;base64,${f.toString('base64')}`
+
+    console.log('load image start')
+
+    console.time('load image')
+
+    console.log(imagePaths[0])
+
+    console.log(await readFile(imagePaths[0].slice(0, 10)))
+
+    const images = await Promise.all(
+      imagePaths.slice(0, 1).map(path => readFile(path).then(toBase64))
+    )
+
+    console.timeEnd('load image')
+
+    console.log('load image end')
+
+    this.images = images
   }
 
   test() {
