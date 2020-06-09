@@ -11,8 +11,6 @@ console.log(process.version)
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-setup()
-
 let win: BrowserWindow | null
 
 // Scheme must be registered before the app is ready
@@ -27,9 +25,9 @@ function createWindow() {
     height: 800,
     webPreferences: {
       nodeIntegration: true,
-      enableRemoteModule: true,
-      webSecurity: false
-    }
+      enableRemoteModule: true
+    },
+    autoHideMenuBar: true
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -77,6 +75,8 @@ app.on('ready', async () => {
     }
   }
   createWindow()
+  require('@/electron/server')
+  setup()
 })
 
 // Exit cleanly on request from parent process in development mode.

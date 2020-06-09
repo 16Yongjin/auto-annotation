@@ -1,45 +1,41 @@
 <template lang="pug">
 div.h100.rel
-  v-app-bar(app dense color='white')
+  v-navigation-drawer(app mini-variant permanent)
+    .toolbar-icon-container
+      v-btn.toolbar-icon(text @click='openFile')
+        v-icon fas fa-file
+      v-btn.toolbar-icon(text @click='showBBox')
+        v-icon fas fa-mask
+      v-btn.toolbar-icon(text @click='useBBoxDrawTool')
+        v-icon fas fa-vector-square
+      v-btn.toolbar-icon(text @click='useBBoxEditTool')
+        v-icon fas fa-edit
+      v-btn.toolbar-icon(text @click='hideAnnotation')
+        v-icon fas fa-eye-slash
 
-    v-btn(text @click='openFile')
-      v-icon fas fa-file
+      v-divider
+      v-btn.toolbar-icon(text @click='showSegmentation')
+        v-icon fas fa-mask
+      v-btn.toolbar-icon(text @click='useSegmentationDrawTool')
+        v-icon fas fa-pen-nib
+      v-btn.toolbar-icon(text @click='useSegmentationEditTool')
+        v-icon fas fa-edit
+      v-btn.toolbar-icon(text @click='hideAnnotation')
+        v-icon fas fa-eye-slash
 
-    v-btn(text @click='showBBox')
-      v-icon fas fa-mask
-    v-btn(text @click='useBBoxDrawTool')
-      v-icon fas fa-vector-square
-    v-btn(text @click='useBBoxEditTool')
-      v-icon fas fa-edit
-    v-btn(text @click='hideAnnotation')
-      v-icon fas fa-eye-slash
-    v-btn(text @click='test')
-      v-icon fas fa-person
+      v-divider
+      v-btn.toolbar-icon(text @click='removeTool')
+        v-icon fas fa-trash-alt
+      v-btn.toolbar-icon(text @click='resetZoom')
+        v-icon fas fa-search-plus
 
-    v-spacer
-
-    v-btn(text @click='showSegmentation')
-      v-icon fas fa-mask
-    v-btn(text @click='useSegmentationDrawTool')
-      v-icon fas fa-pen-nib
-    v-btn(text @click='useSegmentationEditTool')
-      v-icon fas fa-edit
-    v-btn(text @click='hideAnnotation')
-      v-icon fas fa-eye-slash
-
-    v-spacer
-
-    v-btn(text @click='removeTool')
-      v-icon fas fa-trash-alt
-    v-btn(text @click='resetZoom')
-      v-icon fas fa-search-plus
-
-  v-container.pa-0(fluid)
-    v-row
-      v-col.canvas-view(cols='9')
+  v-container.canvas-container.pa-0(fluid)
+    v-row.ma-0.h100
+      v-col.canvas-view.h100(cols='9')
         canvas#canvas(@wheel='onWheel' resize='true')
-      v-col.pa-0(cols='3')
-        annotation-list(:annotations='annotationList' @select="onAnnotationSelect")
+      v-col.pa-0.h100(cols='3')
+        annotation-list.annotaion-list.h100(:annotations='annotationList' @select="onAnnotationSelect")
+
   label-modal(:annotation='selectedAnnotation' @ok="onLabelEdit")
 
   image-preview-bottom-bar(:images='images')
@@ -57,14 +53,15 @@ import { createSegmentationEditTool, createBBoxEditTool } from '@/utils/edit'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
 import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
+import ToolBar from '@/components/ToolBar.vue'
 import coco from '@/assets/coco1.json'
 import { Annotation } from '@/models/user/annotation'
 import { ipcRenderer, remote } from 'electron'
-import { readdir, readFile } from 'mz/fs'
+import { readdir } from 'mz/fs'
 
 @Component({
   name: 'Home',
-  components: { AnnotationList, LabelModal, ImagePreviewBottomBar }
+  components: { AnnotationList, LabelModal, ImagePreviewBottomBar, ToolBar }
 })
 export default class Home extends Vue {
   coco: Coco = coco[0]
@@ -80,6 +77,8 @@ export default class Home extends Vue {
 
   images: string[] = []
 
+  toBase64 = (f: Buffer) => `data:image/png;base64,${f.toString('base64')}`
+
   get annotationList() {
     return this.annotations.filter(b => b.item.isInserted())
   }
@@ -93,45 +92,15 @@ export default class Home extends Vue {
 
     if (!dirPath || canceled) return
 
+    ipcRenderer.send('folder', dirPath)
+
     const fileNames = await readdir(dirPath)
-
-    console.log('dirPath', dirPath.replace(/\\/g, '/'))
-
-    console.log('fileNames', fileNames)
 
     const imagePaths = fileNames
       .filter(name => name.match(/\.jpe?g/))
-      .map(name => `${dirPath}/${name}`.replace(/\\/g, '/'))
       .slice(0, 5)
 
-    console.log('imagePaths', imagePaths)
-
-    const toBase64 = (f: Buffer) =>
-      `data:image/png;base64,${f.toString('base64')}`
-
-    console.log('load image start')
-
-    console.time('load image')
-
-    console.log(imagePaths[0])
-
-    console.log(await readFile(imagePaths[0].slice(0, 10)))
-
-    const images = await Promise.all(
-      imagePaths.slice(0, 1).map(path => readFile(path).then(toBase64))
-    )
-
-    console.timeEnd('load image')
-
-    console.log('load image end')
-
-    this.images = images
-  }
-
-  test() {
-    console.log('test')
-
-    ipcRenderer.send('test', 'hello')
+    this.images = imagePaths
   }
 
   async showBBox() {
@@ -237,16 +206,31 @@ export default class Home extends Vue {
 
     window.addEventListener('keydown', e => this.keyHandler(e))
 
-    ipcRenderer.on('test', (event, v) => {
-      console.log('from test', v)
-    })
-
     ipcRenderer.on('detect', (event, predictions) => {
       console.log('predictions', predictions)
 
       const bboxes = createBBoxes(predictions)
       this.annotations.push(...bboxes)
     })
+
+    ipcRenderer.send('folder', 'C:\\Users\\yongj\\Desktop\\imgs')
+    this.images = [
+      '000000023899.jpg',
+      '000000033638.jpg',
+      '000000034873.jpg',
+      '000000037777.jpg',
+      '000000029393.jpg',
+      '000000023899.jpg',
+      '000000033638.jpg',
+      '000000034873.jpg',
+      '000000037777.jpg',
+      '000000029393.jpg',
+      '000000023899.jpg',
+      '000000033638.jpg',
+      '000000034873.jpg',
+      '000000037777.jpg',
+      '000000029393.jpg'
+    ]
 
     this.useBBoxDrawTool()
   }
@@ -307,9 +291,36 @@ export default class Home extends Vue {
   position: relative;
 }
 
+.canvas-container {
+  height: calc(100vh - 130px);
+}
+
 .canvas-view {
   background: grey;
-  height: calc(100vh - 48px);
   padding: 0;
+}
+
+.annotaion-list {
+  width: 500px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.toolbar-icon-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.toolbar-icon {
+  min-height: 52px;
+  min-width: 56px !important;
+  padding: 0 !important;
+  margin-bottom: 0.5rem;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 </style>

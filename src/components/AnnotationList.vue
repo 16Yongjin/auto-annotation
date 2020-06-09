@@ -1,5 +1,5 @@
 <template lang="pug">
-v-list(dense)
+v-list.list(dense)
   v-subheader.font-weight-bold Annotations
   v-divider
   v-list-item(
