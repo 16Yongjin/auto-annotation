@@ -1,27 +1,25 @@
-import { app, BrowserWindow, ipcMain, nativeImage } from 'electron'
-import path from 'path'
 import express from 'express'
 import cors from 'cors'
-let fileFolder: string
+import bodyParser from 'body-parser'
 
 const port = 8000
 
 const expressApp = express()
 const router = express.Router()
 expressApp.use(cors())
+expressApp.use(bodyParser())
 
-ipcMain.on('folder', (event, folder) => {
-  fileFolder = folder
-})
+router.get('/file', (req, res) => {
+  const { filename } = req.query
 
-router.get('/file/:name', function(req, res) {
-  let filename = fileFolder + path.sep + req.params.name
   console.log('Serving file:', filename)
-  res.sendFile(filename)
+  res.sendFile(filename as string)
 })
 
 expressApp.use('/', router)
 
-expressApp.listen(port, () => {
-  console.log('server running on port', 8000)
+const appServer = expressApp.listen(port, () => {
+  console.log('server running on port', port)
 })
+
+export default { appServer }

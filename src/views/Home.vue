@@ -1,17 +1,21 @@
 <template lang="pug">
-div.h100.rel
-  v-navigation-drawer(app mini-variant permanent)
+div.h100.rel.view
+  v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
       v-btn.toolbar-icon(text @click='openFile')
         v-icon fas fa-file
       v-btn.toolbar-icon(text @click='showBBox')
         v-icon fas fa-mask
+        div detect
       v-btn.toolbar-icon(text @click='useBBoxDrawTool')
         v-icon fas fa-vector-square
+        div draw
       v-btn.toolbar-icon(text @click='useBBoxEditTool')
         v-icon fas fa-edit
+        div edit
       v-btn.toolbar-icon(text @click='hideAnnotation')
         v-icon fas fa-eye-slash
+        div hide
 
       v-divider
       v-btn.toolbar-icon(text @click='showSegmentation')
@@ -38,7 +42,7 @@ div.h100.rel
 
   label-modal(:annotation='selectedAnnotation' @ok="onLabelEdit")
 
-  image-preview-bottom-bar(:images='images')
+  image-preview-bottom-bar(:images='images' @image-select='imageSelect')
 </template>
 
 <script lang="ts">
@@ -56,8 +60,12 @@ import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import ToolBar from '@/components/ToolBar.vue'
 import coco from '@/assets/coco1.json'
 import { Annotation } from '@/models/user/annotation'
-import { ipcRenderer, remote } from 'electron'
+import { remote } from 'electron'
+import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { readdir } from 'mz/fs'
+import { DetectedObject } from '@tensorflow-models/coco-ssd'
+import path from 'path'
+import axios from 'axios'
 
 @Component({
   name: 'Home',
@@ -77,7 +85,7 @@ export default class Home extends Vue {
 
   images: string[] = []
 
-  toBase64 = (f: Buffer) => `data:image/png;base64,${f.toString('base64')}`
+  toBase64 = (buf: Buffer) => `data:image/png;base64,${buf.toString('base64')}`
 
   get annotationList() {
     return this.annotations.filter(b => b.item.isInserted())
@@ -92,12 +100,11 @@ export default class Home extends Vue {
 
     if (!dirPath || canceled) return
 
-    ipcRenderer.send('folder', dirPath)
-
     const fileNames = await readdir(dirPath)
 
     const imagePaths = fileNames
       .filter(name => name.match(/\.jpe?g/))
+      .map(name => encodeURIComponent(`${dirPath}${path.sep}${name}`))
       .slice(0, 5)
 
     this.images = imagePaths
@@ -107,8 +114,9 @@ export default class Home extends Vue {
     if (!this.image) return
 
     const image = this.image.image
-    const dataURL = toDataUrl(image)
-    ipcRenderer.send('detect', dataURL)
+    const dataUrl = toDataUrl(image)
+
+    ipc.send('detect', dataUrl)
   }
 
   showSegmentation() {
@@ -178,6 +186,13 @@ export default class Home extends Vue {
     resetZoom(new Paper.Point(width / 2, height / 2))
   }
 
+  async imageSelect(image: string) {
+    if (this.image) this.image.remove()
+
+    this.image = await createImage(image)
+    this.hideAnnotation()
+  }
+
   async mounted() {
     this.canvas = document.querySelector('canvas#canvas')
 
@@ -189,31 +204,10 @@ export default class Home extends Vue {
 
     // createImage(this.coco.image)
 
-    this.image = await createImage({
-      license: 1,
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      file_name: '',
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      coco_url: require('@/assets/image.jpg'),
-      height: 1,
-      width: 1,
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      date_captured: '',
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      flickr_url: '',
-      id: 1
-    })
-
     window.addEventListener('keydown', e => this.keyHandler(e))
 
-    ipcRenderer.on('detect', (event, predictions) => {
-      console.log('predictions', predictions)
-
-      const bboxes = createBBoxes(predictions)
-      this.annotations.push(...bboxes)
-    })
-
-    ipcRenderer.send('folder', 'C:\\Users\\yongj\\Desktop\\imgs')
+    const serverUrl = 'http://localhost:8000/file?filename='
+    const folderPath = 'C:\\Users\\yongj\\Desktop\\imgs'
     this.images = [
       '000000023899.jpg',
       '000000033638.jpg',
@@ -230,7 +224,14 @@ export default class Home extends Vue {
       '000000034873.jpg',
       '000000037777.jpg',
       '000000029393.jpg'
-    ]
+    ].map(name => encodeURI(`${serverUrl}${folderPath}${path.sep}${name}`))
+
+    this.image = await createImage(this.images[0])
+
+    ipc.on('detect', (event, predictions) => {
+      const bboxes = createBBoxes(predictions)
+      this.annotations.push(...bboxes)
+    })
 
     this.useBBoxDrawTool()
   }
@@ -291,6 +292,10 @@ export default class Home extends Vue {
   position: relative;
 }
 
+.view {
+  padding: 0 0 0 56px;
+}
+
 .canvas-container {
   height: calc(100vh - 130px);
 }
@@ -318,6 +323,10 @@ export default class Home extends Vue {
   min-width: 56px !important;
   padding: 0 !important;
   margin-bottom: 0.5rem;
+}
+
+.toolbar-icon span {
+  display: inline;
 }
 
 body::-webkit-scrollbar {

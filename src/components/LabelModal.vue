@@ -37,12 +37,20 @@ export default class LabelModal extends Vue {
     const annotationBounds = this.annotation.item.bounds
     const viewPos = Paper.view.bounds.point
     const container = this.$refs.modalContainer as Vue
+    const xOffset = 66 // padding-left + extra
     const yOffset = container?.$el.clientHeight / 2 || 86
 
     const { x, y } = annotationBounds.point
       .subtract(viewPos)
-      .add(new Paper.Point(annotationBounds.width, annotationBounds.height / 2))
+      .add(
+        new Paper.Point(
+          annotationBounds.width + xOffset,
+          annotationBounds.height / 2
+        )
+      )
       .multiply(Paper.view.zoom)
+
+    console.log(x, y)
 
     return {
       left: `${x}px`,

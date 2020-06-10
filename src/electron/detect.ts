@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs-node'
 import * as cocoSsd from '@tensorflow-models/coco-ssd'
-import { ipcMain } from 'electron'
+import { ipcMain as ipc } from 'electron'
 import fetch, { Response, RequestInit } from 'node-fetch'
 import { readFile } from 'mz/fs'
 
@@ -8,13 +8,7 @@ declare const __static: string
 
 const removeProtocol = (url: string) => url.replace(/(^\w+:|^)\/\//, '')
 
-// Mock fetch api to support file:// protocol
-// @ts-ignore
-globalThis.fetch = async (url: string, init?: RequestInit | undefined) => {
-  if (!url.startsWith('file://')) {
-    return fetch(url, init)
-  }
-
+const fetchFile = async (url: string) => {
   const path = removeProtocol(url)
   const file = await readFile(path)
   const contentType =
@@ -24,6 +18,11 @@ globalThis.fetch = async (url: string, init?: RequestInit | undefined) => {
   const headers = { 'content-type': contentType }
   return new Response(file, { headers })
 }
+
+// Mock fetch api to support file:// protocol
+// @ts-ignore
+globalThis.fetch = async (url: string, init?: RequestInit | undefined) =>
+  url.startsWith('file://') ? fetchFile(url) : fetch(url, init)
 
 const modelUrl = `file://${__static}/cocossd/model.json`
 
@@ -35,19 +34,11 @@ export const detectObject = async (dataURL: string) => {
 
   if (!model) model = await cocoSsd.load({ modelUrl })
   const predictions = await model.detect(image)
+
   return predictions
 }
 
-export const setup = () => {
-  console.log('setup')
-
-  ipcMain.on('detect', async (event, arg) => {
-    const predictions = await detectObject(arg)
-    event.reply('detect', predictions)
-  })
-
-  ipcMain.on('test', (event, args) => {
-    console.log('from args', args)
-    event.reply('test', 'Hello!')
-  })
-}
+ipc.on('detect', async (event, dataUrl) => {
+  const prediction = await detectObject(dataUrl)
+  event.reply('detect', prediction)
+})

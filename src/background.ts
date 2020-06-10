@@ -5,13 +5,14 @@ import {
   createProtocol,
   installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
-import { setup } from '@/electron/index'
+import { Server } from 'http'
 
 console.log(process.version)
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 let win: BrowserWindow | null
+let server: Server | null
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -75,8 +76,12 @@ app.on('ready', async () => {
     }
   }
   createWindow()
-  require('@/electron/server')
-  setup()
+  const {
+    default: { appServer }
+  } = require('@/electron/server')
+  server = appServer
+
+  require('@/electron/detect')
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -85,11 +90,13 @@ if (isDevelopment) {
     process.on('message', data => {
       if (data === 'graceful-exit') {
         app.quit()
+        if (server) server.close()
       }
     })
   } else {
     process.on('SIGTERM', () => {
       app.quit()
+      if (server) server.close()
     })
   }
 }

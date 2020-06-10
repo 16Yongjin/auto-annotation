@@ -1,7 +1,4 @@
 import Paper from 'paper'
-import { Image } from '@/models/datasets'
-
-const delay = (n: number) => new Promise(resolve => setTimeout(resolve, n))
 
 function onloadImage(obj: HTMLImageElement): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -10,11 +7,11 @@ function onloadImage(obj: HTMLImageElement): Promise<HTMLImageElement> {
   })
 }
 
-export async function createImage(image: Image) {
+export async function createImage(imageUrl: string) {
   const img = document.createElement('img')
   const imgLoading = onloadImage(img)
-  img.src = image.coco_url
-  img.id = image.id.toString()
+  img.src = imageUrl
+  img.crossOrigin = 'anonymous'
 
   await imgLoading
 

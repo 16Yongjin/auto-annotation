@@ -49,7 +49,4 @@ export default class DraggableContainer extends Vue {
   position: absolute;
   z-index: 9;
 }
-#draggable-header {
-  z-index: 10;
-}
 </style>

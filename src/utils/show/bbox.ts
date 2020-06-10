@@ -1,12 +1,7 @@
 import { Annotation } from '@/models/user/annotation'
 import Paper, { Point } from 'paper'
-import ColorHash from 'color-hash'
-import { getCategory } from '@/utils'
-import { Annotation as AnnotationData } from '@/models/datasets'
 import { CreateBBoxOptions } from '@/models/options/createBBox'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
-
-const colorHash = new ColorHash()
 
 const defaultOption: CreateBBoxOptions = {
   category: false
