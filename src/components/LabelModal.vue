@@ -1,5 +1,5 @@
 <template lang="pug">
-draggable-container.label-modal(v-if="showModal" :style='posStyle' ref='modalContainer')
+draggable-container.label-modal(:style='posStyle' ref='modalContainer')
   v-card
     v-card-title Label
     v-card-text.pb-0
@@ -26,10 +26,6 @@ import { Annotation } from '@/models/user/annotation'
 @Component({ name: 'LabelModal', components: { DraggableContainer } })
 export default class LabelModal extends Vue {
   @Prop() private annotation!: Annotation
-
-  get showModal() {
-    return this.annotation && this.annotation.item.isInserted()
-  }
 
   get posStyle() {
     if (!this.annotation) return
@@ -60,6 +56,8 @@ export default class LabelModal extends Vue {
 
   mounted() {
     if (!this.annotation) return
+
+    console.log('mounted!')
 
     const labelText = this.$refs.labelText as Vue
     const labelInput = labelText.$el.querySelector('input')

@@ -1,13 +1,11 @@
 import express from 'express'
 import cors from 'cors'
-import bodyParser from 'body-parser'
 
 const port = 8000
 
 const expressApp = express()
 const router = express.Router()
 expressApp.use(cors())
-expressApp.use(bodyParser())
 
 router.get('/file', (req, res) => {
   const { filename } = req.query

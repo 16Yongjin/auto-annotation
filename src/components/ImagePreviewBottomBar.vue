@@ -1,24 +1,27 @@
 <template lang="pug">
 horizontal-scroller.img-container
     v-img.mr-1.ml-1(
-      v-for='image, i in images' :key='i'
-      :src='image'
+      v-for='dataset, i in datasets' :key='i'
+      :src='`${serverUrl}${dataset.path}`'
       height='100'
       width='100'
-      @click='selectImage(image)'
+      @click='selectDataset(i)'
       )
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Dataset } from '@/models/user/annotation'
 import HorizontalScroller from '@/components/HorizontalScroller.vue'
 
 @Component({ name: 'LabelModal', components: { HorizontalScroller } })
 export default class LabelModal extends Vue {
-  @Prop() private images!: string[]
+  @Prop() private datasets!: Dataset[]
 
-  selectImage(image: string) {
-    this.$emit('image-select', image)
+  private serverUrl = 'http://localhost:8000/file?filename='
+
+  selectDataset(index: number) {
+    this.$emit('dataset-select', index)
   }
 }
 </script>

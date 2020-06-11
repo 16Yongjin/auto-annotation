@@ -7,7 +7,7 @@ function onloadImage(obj: HTMLImageElement): Promise<HTMLImageElement> {
   })
 }
 
-export async function createImage(imageUrl: string) {
+export async function createRaster(imageUrl: string) {
   const img = document.createElement('img')
   const imgLoading = onloadImage(img)
   img.src = imageUrl
