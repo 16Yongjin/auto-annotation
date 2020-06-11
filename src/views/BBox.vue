@@ -43,7 +43,7 @@ import Paper from 'paper'
 import { Component, Vue } from 'vue-property-decorator'
 import { Mutation } from 'vuex-class'
 import { UserAction } from '@/models/user/actions'
-import { zoomOnWheel, resetZoom, toDataUrl } from '@/utils'
+import { zoomOnWheel, resetZoom, toDataUrl, serializeAnnotation } from '@/utils'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
@@ -177,6 +177,7 @@ export default class Home extends Vue {
 
     const annotations = this.selectedDataset.annotations.map(a => a.item)
     Paper.project.activeLayer.addChildren(annotations)
+
     this.resetZoom()
   }
 
@@ -202,7 +203,7 @@ export default class Home extends Vue {
           height: dataset.raster?.height,
           path: dataset.path
         },
-        annotations: [],
+        annotations: dataset.annotations.map(serializeAnnotation),
         labeled: !!dataset.annotations.length
       }
     })
