@@ -46,8 +46,6 @@ export default class LabelModal extends Vue {
       )
       .multiply(Paper.view.zoom)
 
-    console.log(x, y)
-
     return {
       left: `${x}px`,
       top: `${y - yOffset}px`
@@ -56,8 +54,6 @@ export default class LabelModal extends Vue {
 
   mounted() {
     if (!this.annotation) return
-
-    console.log('mounted!')
 
     const labelText = this.$refs.labelText as Vue
     const labelInput = labelText.$el.querySelector('input')

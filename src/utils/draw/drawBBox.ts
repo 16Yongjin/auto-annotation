@@ -9,6 +9,23 @@ function drawBox(start: paper.Point, end: paper.Point, color: paper.Color) {
   return box
 }
 
+function drawBBox(start: paper.Point, end: paper.Point, color: paper.Color) {
+  const box = drawBox(start, end, color)
+
+  box.fillColor = new Paper.Color('white')
+  box.fillColor.alpha = 0.01
+
+  box.onMouseEnter = () => {
+    if (box.fillColor) box.fillColor.alpha = 0.2
+  }
+
+  box.onMouseLeave = () => {
+    if (box.fillColor) box.fillColor.alpha = 0.01
+  }
+
+  return box
+}
+
 const minimumBBoxSize = (box: paper.Path.Rectangle) =>
   box.bounds.width >= 5 && box.bounds.height >= 5
 
@@ -30,7 +47,7 @@ export function createBBoxDrawTool(onDrawEnd: OnAction) {
 
   tool.onMouseUp = function({ downPoint, point }: paper.ToolEvent) {
     if (box) box.remove()
-    box = drawBox(downPoint, point, boxColor)
+    box = drawBBox(downPoint, point, boxColor)
 
     if (minimumBBoxSize(box)) {
       const userAction = new DrawActoin(box)

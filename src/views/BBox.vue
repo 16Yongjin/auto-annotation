@@ -7,19 +7,18 @@ div.h100.rel.view
       v-btn.toolbar-icon(text @click='showBBox')
         v-icon fas fa-mask
         div detect
-      v-btn.toolbar-icon(text @click='useBBoxDrawTool')
-        v-icon fas fa-vector-square
-        div draw
-      v-btn.toolbar-icon(text @click='useBBoxEditTool')
-        v-icon fas fa-edit
-        div edit
+      v-btn-toggle.flex-column(borderless v-model='selectedTool')
+        v-btn.toolbar-icon(text @click='useBBoxDrawTool')
+          v-icon fas fa-vector-square
+          div draw
+        v-btn.toolbar-icon(text @click='useBBoxEditTool')
+          v-icon fas fa-edit
+          div edit
       v-btn.toolbar-icon(text @click='hideAnnotation')
         v-icon fas fa-eye-slash
         div hide
 
       v-divider
-      v-btn.toolbar-icon(text @click='removeTool')
-        v-icon fas fa-trash-alt
       v-btn.toolbar-icon(text @click='resetZoom')
         v-icon fas fa-expand
       v-btn.toolbar-icon(text @click='exportAnnotation')
@@ -42,7 +41,7 @@ div.h100.rel.view
 import Paper from 'paper'
 import { Component, Vue } from 'vue-property-decorator'
 import { Mutation } from 'vuex-class'
-import { UserAction } from '@/models/user/actions'
+import { UserAction, RemoveAction } from '@/models/user/actions'
 import { zoomOnWheel, resetZoom, toDataUrl, serializeAnnotation } from '@/utils'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
@@ -63,7 +62,13 @@ import { BBoxExport } from '../models/export'
 })
 export default class Home extends Vue {
   datasets: Dataset[] = []
-  selectedDataset: Dataset | null = null
+  datasetIndex = -1
+  selectedTool = 0
+
+  get selectedDataset(): Dataset | undefined {
+    return this.datasets[this.datasetIndex]
+  }
+
   selectedAnnotation: Annotation | null = null
 
   tool: paper.Tool | null = null
@@ -73,15 +78,27 @@ export default class Home extends Vue {
   @Mutation undo!: Function
   @Mutation redo!: Function
   @Mutation addUserAction!: Function
+  @Mutation resetUserActions!: Function
 
   get annotationList() {
-    return this.selectedDataset
-      ? this.selectedDataset.annotations.filter(b => b.item.isInserted())
-      : []
+    return (
+      this.selectedDataset?.annotations.filter(b => b.item.isInserted()) || []
+    )
   }
 
   get showLabelModal() {
     return this.selectedAnnotation && this.selectedAnnotation.item.isInserted()
+  }
+
+  onLabelEdit() {
+    this.selectedAnnotation = null
+  }
+
+  onAnnotationSelect(annotation: Annotation) {
+    this.selectedAnnotation = null
+    this.$nextTick(() => {
+      this.selectedAnnotation = annotation
+    })
   }
 
   async openFile() {
@@ -99,6 +116,11 @@ export default class Home extends Vue {
       .filter(name => name.match(/\.jpe?g/))
       .map(name => encodeURIComponent(`${dirPath}${path.sep}${name}`))
       .slice(0, 5)
+
+    this.datasets.forEach(dataset => {
+      dataset.annotations.forEach(a => a.item.remove())
+      dataset.raster && dataset.raster.remove()
+    })
 
     this.datasets = images.map(path => ({
       path,
@@ -118,17 +140,6 @@ export default class Home extends Vue {
     ipc.send('detect', dataUrl)
   }
 
-  hideAnnotation() {
-    if (!this.selectedDataset) return
-
-    this.selectedDataset.annotations.forEach(i => i.item.remove())
-    this.selectedDataset.annotations = []
-
-    this.selectedAnnotation = null
-
-    this.removeTool()
-  }
-
   useBBoxDrawTool() {
     this.removeTool()
     this.tool = createBBoxDrawTool((userAction: UserAction) => {
@@ -136,6 +147,12 @@ export default class Home extends Vue {
 
       const bbox = userAction.item as paper.Path.Rectangle
       const userBBox = { item: bbox, label: 'untitled' }
+      bbox.onClick = () => {
+        console.log('click')
+
+        this.selectedAnnotation = userBBox
+        userBBox.item.selected = true
+      }
       this.addAnnotations([userBBox])
       this.selectedAnnotation = userBBox
     })
@@ -146,6 +163,15 @@ export default class Home extends Vue {
     this.tool = createBBoxEditTool((userAction: UserAction) => {
       this.addUserAction(userAction)
     })
+  }
+
+  hideAnnotation() {
+    if (!this.selectedDataset) return
+
+    this.selectedDataset.annotations.forEach(i => i.item.remove())
+    this.selectedDataset.annotations = []
+    this.selectedAnnotation = null
+    this.removeTool()
   }
 
   removeTool() {
@@ -166,6 +192,9 @@ export default class Home extends Vue {
 
     if (this.selectedDataset.raster) this.selectedDataset.raster.remove()
 
+    this.selectedDataset.annotations = this.selectedDataset.annotations.filter(
+      ({ item }) => !item.data.destroy
+    )
     this.selectedDataset.annotations.forEach(a => a.item.remove())
   }
 
@@ -182,9 +211,14 @@ export default class Home extends Vue {
   }
 
   async selectDataset(index: number) {
-    this.hideCurrentDataset()
+    if (this.datasetIndex === index) return
 
-    this.selectedDataset = this.datasets[index]
+    this.hideCurrentDataset()
+    this.resetUserActions()
+
+    this.datasetIndex = index
+
+    if (!this.selectedDataset) return
 
     if (this.selectedDataset.raster) {
       this.showDataset()
@@ -218,9 +252,7 @@ export default class Home extends Vue {
   }
 
   async mounted() {
-    const canvas: HTMLCanvasElement | null = document.querySelector(
-      'canvas#canvas'
-    )
+    const canvas: HTMLCanvasElement | null = document.querySelector('canvas')
 
     if (!canvas) return
 
@@ -259,27 +291,47 @@ export default class Home extends Vue {
 
     ipc.on('detect', (event, predictions) => {
       const bboxes = createBBoxes(predictions)
+      bboxes.forEach(bbox => {
+        bbox.item.onClick = () => {
+          console.log('click')
+
+          this.selectedAnnotation = bbox
+          bbox.item.selected = true
+        }
+      })
       this.addAnnotations(bboxes)
     })
 
     this.useBBoxDrawTool()
   }
 
-  keyHandler(e: KeyboardEvent) {
-    if (e.ctrlKey && e.key.toLowerCase() === 'z') {
-      e.shiftKey ? this.redo() : this.undo()
+  keyHandler({ ctrlKey, shiftKey, key }: KeyboardEvent) {
+    console.log(key)
+
+    if (ctrlKey && key.toLowerCase() === 'z') {
+      shiftKey ? this.redo() : this.undo()
+    } else if (key === 'ArrowLeft') {
+      const datasetIndex = Math.max(this.datasetIndex - 1, 0)
+      this.selectDataset(datasetIndex)
+    } else if (key === 'ArrowRight') {
+      const datasetIndex = Math.min(
+        this.datasetIndex + 1,
+        this.datasets.length - 1
+      )
+      this.selectDataset(datasetIndex)
+    } else if (key === 'Delete') {
+      this.removeSelectedAnnotation()
     }
   }
 
-  onLabelEdit() {
-    this.selectedAnnotation = null
-  }
+  removeSelectedAnnotation() {
+    if (!this.selectedAnnotation) return
 
-  onAnnotationSelect(annotation: Annotation) {
+    this.selectedAnnotation.item.remove()
+    this.selectedAnnotation.item.data.destroy = true
+    const userAction = new RemoveAction(this.selectedAnnotation.item)
+    this.addUserAction(userAction)
     this.selectedAnnotation = null
-    this.$nextTick(() => {
-      this.selectedAnnotation = annotation
-    })
   }
 }
 </script>

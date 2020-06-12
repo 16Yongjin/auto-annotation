@@ -30,6 +30,10 @@ export default new Vuex.Store({
     addUserAction(state, userAction: UserAction) {
       state.userActions.push(userAction)
       state.redoActions = []
+    },
+    resetUserActions(state) {
+      state.userActions = []
+      state.redoActions = []
     }
   },
   actions: {}

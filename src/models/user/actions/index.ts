@@ -21,10 +21,24 @@ export abstract class UserAction {
 export class DrawActoin extends UserAction {
   undo() {
     this.item.remove()
+    this.item.data.destroy = true
   }
 
   redo() {
     Paper.project.activeLayer.addChild(this.item)
+    this.item.data.destroy = false
+  }
+}
+
+export class RemoveAction extends UserAction {
+  undo() {
+    Paper.project.activeLayer.addChild(this.item)
+    this.item.data.destroy = false
+  }
+
+  redo() {
+    this.item.remove()
+    this.item.data.destroy = true
   }
 }
 

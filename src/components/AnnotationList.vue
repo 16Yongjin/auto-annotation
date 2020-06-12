@@ -26,11 +26,11 @@ export default class AnnotationList extends Vue {
   }
 
   onItemMouseover(annotaion: Annotation) {
-    annotaion.item.selected = true
+    annotaion.item.onMouseEnter && annotaion.item.onMouseEnter()
   }
 
   onItemMouseleave(annotaion: Annotation) {
-    annotaion.item.selected = false
+    annotaion.item.onMouseLeave && annotaion.item.onMouseLeave()
   }
 }
 </script>

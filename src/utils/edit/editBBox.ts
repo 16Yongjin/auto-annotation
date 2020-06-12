@@ -8,6 +8,7 @@ import {
 const hitOptions = {
   segments: true,
   stroke: true,
+  fill: true,
   tolerance: 3
 }
 
@@ -24,7 +25,7 @@ export function createBBoxEditTool(onEdit: OnAction) {
 
     if (!hitResult) return
 
-    if (hitResult.type === 'stroke') {
+    if (hitResult.type === 'stroke' || hitResult.type === 'fill') {
       // 박스 테두리 클릭, 이대로 마우스 드래그 시 박스 이동
       bbox = hitResult.item as paper.Path.Rectangle
       bbox.data.state = 'moving'
@@ -64,6 +65,8 @@ export function createBBoxEditTool(onEdit: OnAction) {
     if (!bbox) return
 
     if (bbox.data.state === 'moving') {
+      if (bbox.position.equals(bbox.data.prevPosition)) return
+
       const editAction = new MoveBBoxAction(bbox)
 
       onEdit(editAction)
