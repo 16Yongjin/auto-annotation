@@ -91,6 +91,7 @@ export default class Home extends Vue {
   }
 
   onLabelEdit() {
+    console.log('onLabeledit')
     this.selectedAnnotation = null
   }
 
@@ -147,9 +148,7 @@ export default class Home extends Vue {
 
       const bbox = userAction.item as paper.Path.Rectangle
       const userBBox = { item: bbox, label: 'untitled' }
-      bbox.onClick = () => {
-        console.log('click')
-
+      bbox.onMouseDown = () => {
         this.selectedAnnotation = userBBox
         userBBox.item.selected = true
       }
@@ -292,9 +291,7 @@ export default class Home extends Vue {
     ipc.on('detect', (event, predictions) => {
       const bboxes = createBBoxes(predictions)
       bboxes.forEach(bbox => {
-        bbox.item.onClick = () => {
-          console.log('click')
-
+        bbox.item.onMouseDown = () => {
           this.selectedAnnotation = bbox
           bbox.item.selected = true
         }
