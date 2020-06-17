@@ -203,7 +203,7 @@ export default class Home extends Vue {
 }
 </script>
 
-<style>
+<style scoped>
 #canvas {
   width: 100%;
   height: 100%;
@@ -234,27 +234,5 @@ export default class Home extends Vue {
   width: 500px;
   height: 100%;
   overflow-y: auto;
-}
-
-.toolbar-icon-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  height: 100%;
-}
-
-.toolbar-icon {
-  min-height: 52px;
-  min-width: 56px !important;
-  padding: 0 !important;
-  margin-bottom: 0.5rem;
-}
-
-.toolbar-icon span {
-  display: inline;
-}
-
-body::-webkit-scrollbar {
-  display: none;
 }
 </style>

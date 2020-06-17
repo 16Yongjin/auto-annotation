@@ -14,14 +14,6 @@ export function createBBox(annotation: DetectedObject): Annotation {
   bbox.fillColor = new Paper.Color('white')
   bbox.fillColor.alpha = 0.01
 
-  bbox.onMouseEnter = () => {
-    if (bbox.fillColor) bbox.fillColor.alpha = 0.2
-  }
-
-  bbox.onMouseLeave = () => {
-    if (bbox.fillColor) bbox.fillColor.alpha = 0.01
-  }
-
   return { item: bbox, label: annotation.class }
 }
 

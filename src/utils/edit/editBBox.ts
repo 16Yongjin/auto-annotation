@@ -28,6 +28,7 @@ export function createBBoxEditTool(onEdit: OnAction) {
     if (hitResult.type === 'stroke' || hitResult.type === 'fill') {
       // 박스 테두리 클릭, 이대로 마우스 드래그 시 박스 이동
       bbox = hitResult.item as paper.Path.Rectangle
+      if (bbox.fillColor) bbox.fillColor.alpha = 0.2
       bbox.data.state = 'moving'
       bbox.data.prevPosition = bbox.position.clone()
     } else if (hitResult.type === 'segment') {

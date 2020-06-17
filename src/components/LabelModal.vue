@@ -9,6 +9,7 @@ draggable-container.label-modal(:style='posStyle' ref='modalContainer')
         hide-details
         v-model="annotation.label"
         @keyup.enter="onOk"
+        @keydown.esc="onOk"
         label="레이블 입력"
         ref="labelText")
     v-card-actions
@@ -61,9 +62,7 @@ export default class LabelModal extends Vue {
   }
 
   onClear() {
-    this.annotation.item.remove()
-
-    this.$emit('ok')
+    this.$emit('clear')
   }
 
   onOk() {

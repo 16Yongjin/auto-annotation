@@ -15,14 +15,6 @@ function drawBBox(start: paper.Point, end: paper.Point, color: paper.Color) {
   box.fillColor = new Paper.Color('white')
   box.fillColor.alpha = 0.01
 
-  box.onMouseEnter = () => {
-    if (box.fillColor) box.fillColor.alpha = 0.2
-  }
-
-  box.onMouseLeave = () => {
-    if (box.fillColor) box.fillColor.alpha = 0.01
-  }
-
   return box
 }
 

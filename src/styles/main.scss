@@ -1,0 +1,21 @@
+.toolbar-icon-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.toolbar-icon {
+  min-height: 52px;
+  min-width: 56px !important;
+  padding: 0 !important;
+  margin-bottom: 0.5rem;
+}
+
+.toolbar-icon > span {
+  display: inline !important;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}

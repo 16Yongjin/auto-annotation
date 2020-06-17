@@ -7,8 +7,6 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 import { Server } from 'http'
 
-console.log(process.version)
-
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 let win: BrowserWindow | null

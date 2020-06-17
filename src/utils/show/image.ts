@@ -16,9 +16,7 @@ export async function createRaster(imageUrl: string) {
   await imgLoading
 
   const raster = new Paper.Raster(img)
-  console.log('raster loaded?', raster.loaded)
   const center = new Paper.Point(raster.width / 2, raster.height / 2)
-  console.log(center)
 
   raster.position = center
   Paper.view.center = center
