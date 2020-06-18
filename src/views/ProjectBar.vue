@@ -1,9 +1,9 @@
 <template lang="pug">
 v-toolbar.toolbar
   v-btn-toggle(borderless mandatory tile)
-    v-btn(text @click='test')
+    v-btn(text @click='test' to='/main')
       v-icon fas fa-home
-    v-btn(text v-for='project, i in projects' :key='i')
+    v-btn(text v-for='project, i in projects' :key='i' :to="{ name: 'bbox' }")
       span {{ project.name }}
 </template>
 

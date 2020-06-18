@@ -23,10 +23,7 @@ export const readImagePaths = async (dirPath: string) => {
   const toFullPath = (name: string) =>
     encodeURIComponent(`${dirPath}${path.sep}${name}`)
 
-  const imagePaths = fileNames
-    .filter(filterJPEG)
-    .map(toFullPath)
-    .slice(0, 5)
+  const imagePaths = fileNames.filter(filterJPEG).map(toFullPath)
 
   return imagePaths
 }

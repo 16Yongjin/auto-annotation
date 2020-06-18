@@ -10,7 +10,7 @@ div.h100.rel.view
       v-btn-toggle.flex-column(borderless v-model='selectedTool')
         v-btn.toolbar-icon(text @click='useBBoxDrawTool')
           v-icon fas fa-vector-square
-          div draw
+          div Box
         v-btn.toolbar-icon(text @click='useBBoxEditTool')
           v-icon fas fa-edit
           div edit
@@ -50,20 +50,19 @@ import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
-import { loadDatasets } from '@/utils/file'
+import { loadDatasets, readImagePaths, createDatasets } from '@/utils/file'
 import { processExportAnnotation } from '@/utils/export'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
 import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
-
-import path from 'path'
+import { DetectedObject } from '@tensorflow-models/coco-ssd'
 
 @Component({
-  name: 'Home',
+  name: 'BBox',
   components: { AnnotationList, LabelModal, ImagePreviewBottomBar }
 })
-export default class Home extends Vue {
+export default class BBox extends Vue {
   datasets: Dataset[] = []
   datasetIndex = -1
   selectedAnnotation: Annotation | null = null
@@ -223,7 +222,7 @@ export default class Home extends Vue {
     }
   }
 
-  async mounted() {
+  setup() {
     const canvas: HTMLCanvasElement | null = document.querySelector('canvas')
 
     if (!canvas) return
@@ -233,50 +232,36 @@ export default class Home extends Vue {
     Paper.settings.handleSize = 8
 
     window.addEventListener('keydown', e => this.keyHandler(e))
+  }
 
+  async testSetup() {
     const folderPath = 'C:\\Users\\yongj\\Desktop\\imgs'
-    const images = [
-      '000000023899.jpg',
-      '000000033638.jpg',
-      '000000034873.jpg',
-      '000000037777.jpg',
-      '000000029393.jpg',
-      '000000023899.jpg',
-      '000000033638.jpg',
-      '000000034873.jpg',
-      '000000037777.jpg',
-      '000000029393.jpg',
-      '000000023899.jpg',
-      '000000033638.jpg',
-      '000000034873.jpg',
-      '000000037777.jpg',
-      '000000029393.jpg'
-    ].map(name => encodeURI(`${folderPath}${path.sep}${name}`))
 
-    this.datasets = images.map(path => ({
-      path,
-      annotations: [],
-      labeled: false
-    }))
+    const imagePaths = await readImagePaths(folderPath)
+    this.datasets = createDatasets(imagePaths)
 
     this.selectDataset(0)
+  }
 
-    ipc.on('detect', (event, predictions) => {
-      const bboxes = createBBoxes(predictions)
-      bboxes.forEach(bbox => {
-        bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
-        bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
-        bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
-      })
-      this.addAnnotations(bboxes)
+  onDetect(event: Electron.IpcRendererEvent, predictions: DetectedObject[]) {
+    const bboxes = createBBoxes(predictions)
+    bboxes.forEach(bbox => {
+      bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
+      bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
+      bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
     })
+    this.addAnnotations(bboxes)
+  }
+
+  async mounted() {
+    this.setup()
+    await this.testSetup()
+
+    ipc.on('detect', this.onDetect.bind(this))
 
     this.useBBoxDrawTool()
 
-    this.openProject({
-      name: 'test',
-      datasets: this.datasets
-    })
+    this.openProject({ name: 'test', datasets: this.datasets })
   }
 
   exportAnnotation() {
