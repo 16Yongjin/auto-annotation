@@ -76,6 +76,7 @@ export default class Home extends Vue {
   @Mutation redo!: Function
   @Mutation addUserAction!: Function
   @Mutation resetUserActions!: Function
+  @Mutation openProject!: Function
 
   get selectedDataset(): Dataset | undefined {
     return this.datasets[this.datasetIndex]
@@ -271,6 +272,11 @@ export default class Home extends Vue {
     })
 
     this.useBBoxDrawTool()
+
+    this.openProject({
+      name: 'test',
+      datasets: this.datasets
+    })
   }
 
   exportAnnotation() {
