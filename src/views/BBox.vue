@@ -4,7 +4,7 @@ div.h100.rel.view
     .toolbar-icon-container
       v-btn.toolbar-icon(text @click='openFile')
         v-icon fas fa-file
-      v-btn.toolbar-icon(text @click='showBBox')
+      v-btn.toolbar-icon(text @click='detectObject')
         v-icon fas fa-mask
         div detect
       v-btn-toggle.flex-column(borderless v-model='selectedTool')
@@ -17,9 +17,9 @@ div.h100.rel.view
         v-btn.toolbar-icon(text @click='useMoveTool')
           v-icon fas fa-hand-paper
           div move
-      v-btn.toolbar-icon(text @click='hideAnnotation')
-        v-icon fas fa-eye-slash
-        div hide
+      v-btn.toolbar-icon(text @click='clearAnnotation')
+        v-icon fas fa-trash
+        div Clear
 
       v-divider
       v-btn.toolbar-icon(text @click='resetZoom')
@@ -121,7 +121,7 @@ export default class BBox extends Vue {
     this.selectDataset(0)
   }
 
-  async showBBox() {
+  async detectObject() {
     if (!this.selectedDataset?.raster) return
 
     const image = this.selectedDataset.raster.image
@@ -144,6 +144,7 @@ export default class BBox extends Vue {
       this.addAnnotations([userBBox])
       this.selectedAnnotation = userBBox
     })
+    this.selectedTool = 0
   }
 
   useBBoxEditTool() {
@@ -151,14 +152,16 @@ export default class BBox extends Vue {
     this.tool = createBBoxEditTool((userAction: UserAction) => {
       this.addUserAction(userAction)
     })
+    this.selectedTool = 1
   }
 
   useMoveTool() {
     this.removeTool()
     this.tool = createMoveTool()
+    this.selectedTool = 2
   }
 
-  hideAnnotation() {
+  clearAnnotation() {
     if (!this.selectedDataset) return
 
     this.selectedDataset.annotations.forEach(i => i.item.remove())
@@ -295,16 +298,34 @@ export default class BBox extends Vue {
     if (ctrlKey && key.toLowerCase() === 'z') {
       shiftKey ? this.redo() : this.undo()
     } else if (key === 'ArrowLeft') {
-      const datasetIndex = Math.max(this.datasetIndex - 1, 0)
-      this.selectDataset(datasetIndex)
+      this.prevDataset()
     } else if (key === 'ArrowRight') {
-      const nextIndex = this.datasetIndex + 1
-      const lastIndex = this.datasets.length - 1
-      const datasetIndex = Math.min(nextIndex, lastIndex)
-      this.selectDataset(datasetIndex)
+      this.nextDataset()
     } else if (key === 'Delete') {
       this.removeSelectedAnnotation()
+    } else if (key === 'd') {
+      this.detectObject()
+    } else if (key === 'b') {
+      this.useBBoxDrawTool()
+    } else if (key === 'e') {
+      this.useBBoxEditTool()
+    } else if (key === 'm') {
+      this.useMoveTool()
+    } else if (key === 'c') {
+      this.clearAnnotation()
     }
+  }
+
+  prevDataset() {
+    const datasetIndex = Math.max(this.datasetIndex - 1, 0)
+    this.selectDataset(datasetIndex)
+  }
+
+  nextDataset() {
+    const nextIndex = this.datasetIndex + 1
+    const lastIndex = this.datasets.length - 1
+    const datasetIndex = Math.min(nextIndex, lastIndex)
+    this.selectDataset(datasetIndex)
   }
 
   addAnnotations(annotations: Annotation[]) {
