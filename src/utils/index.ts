@@ -1,6 +1,7 @@
 export { createTooltip } from './tooltip'
 export { categories, getCategory } from './categories'
 export { zoomOnWheel, resetZoom } from './zoom'
+export { createMoveTool } from './move'
 export { rgbFromInt, rgbFromString } from './color'
 export { toDataUrl } from './dataUrl'
 export { serializeAnnotation } from './export'

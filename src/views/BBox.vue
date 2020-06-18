@@ -14,6 +14,9 @@ div.h100.rel.view
         v-btn.toolbar-icon(text @click='useBBoxEditTool')
           v-icon fas fa-edit
           div edit
+        v-btn.toolbar-icon(text @click='useMoveTool')
+          v-icon fas fa-hand-paper
+          div move
       v-btn.toolbar-icon(text @click='hideAnnotation')
         v-icon fas fa-eye-slash
         div hide
@@ -43,7 +46,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import { Mutation } from 'vuex-class'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { UserAction, RemoveAction } from '@/models/user/actions'
-import { zoomOnWheel, resetZoom, toDataUrl } from '@/utils'
+import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
@@ -93,9 +96,16 @@ export default class Home extends Vue {
   }
 
   get cursor() {
-    if (this.drawToolSelected) return 'crosshair'
-    if (this.selectedTool === 1) return 'all-scroll'
-    return 'default'
+    switch (this.selectedTool) {
+      case 0:
+        return 'crosshair'
+      case 1:
+        return 'all-scroll'
+      case 2:
+        return 'grab'
+      default:
+        return 'default'
+    }
   }
 
   onAnnotationSelect(annotation: Annotation) {
@@ -141,6 +151,11 @@ export default class Home extends Vue {
     this.tool = createBBoxEditTool((userAction: UserAction) => {
       this.addUserAction(userAction)
     })
+  }
+
+  useMoveTool() {
+    this.removeTool()
+    this.tool = createMoveTool()
   }
 
   hideAnnotation() {
@@ -266,7 +281,7 @@ export default class Home extends Vue {
 
   onBBoxMouseEnter(bbox: Annotation) {
     return () => {
-      if (this.drawToolSelected) return
+      if (this.selectedTool !== 1) return
       if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.2
     }
   }
@@ -279,7 +294,7 @@ export default class Home extends Vue {
 
   onBBoxMouseDown(bbox: Annotation) {
     return () => {
-      if (this.drawToolSelected) return
+      if (this.selectedTool !== 1) return
       this.selectedAnnotation = bbox
       bbox.item.selected = true
     }
@@ -352,7 +367,7 @@ export default class Home extends Vue {
 }
 
 .canvas-container {
-  height: calc(100vh - 130px);
+  height: calc(100vh - 130px - 56px);
 }
 
 .canvas-view {
