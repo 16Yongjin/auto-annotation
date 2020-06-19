@@ -1,32 +1,16 @@
 <template lang="pug">
 div.h100.rel.view
-  v-navigation-drawer(absolute mini-variant permanent)
-    .toolbar-icon-container
-      v-btn.toolbar-icon(text @click='openFile')
-        v-icon fas fa-file
-      v-btn.toolbar-icon(text @click='detectObject')
-        v-icon fas fa-mask
-        div detect
-      v-btn-toggle.flex-column(borderless v-model='selectedTool')
-        v-btn.toolbar-icon(text @click='useBBoxDrawTool')
-          v-icon fas fa-vector-square
-          div Box
-        v-btn.toolbar-icon(text @click='useBBoxEditTool')
-          v-icon fas fa-edit
-          div edit
-        v-btn.toolbar-icon(text @click='useMoveTool')
-          v-icon fas fa-hand-paper
-          div move
-      v-btn.toolbar-icon(text @click='clearAnnotation')
-        v-icon fas fa-trash
-        div Clear
-
-      v-divider
-      v-btn.toolbar-icon(text @click='resetZoom')
-        v-icon fas fa-expand
-      v-btn.toolbar-icon(text @click='exportAnnotation')
-        v-icon fas fa-file-export
-        div export
+  bbox-toolbar(
+    :onFileOpen='onFileOpen'
+    :onDetectObject='onDetectObject'
+    :useBBoxDrawTool='useBBoxDrawTool'
+    :useBBoxEditTool='useBBoxEditTool'
+    :useMoveTool='useMoveTool'
+    :clearAnnotation='clearAnnotation'
+    :resetZoom='resetZoom'
+    :exportAnnotation='exportAnnotation'
+    :selectedTool='selectedTool'
+  )
 
   v-container.canvas-container.pa-0(fluid)
     v-row.ma-0.h100
@@ -35,7 +19,7 @@ div.h100.rel.view
       v-col.pa-0.h100(cols='3')
         annotation-list.annotaion-list.h100(:annotations='annotationList' @select='onAnnotationSelect')
 
-  label-modal(v-if='showLabelModal' :annotation='selectedAnnotation' @clear='onRemoveAnnotation' @ok='onLabelEdit')
+  label-modal(v-if='showLabelModal' :annotation='selectedAnnotation' @clear='removeSelectedAnnotation' @ok='onLabelEdit')
 
   image-preview-bottom-bar(:datasets='datasets' @dataset-select='selectDataset' :dataset-index='datasetIndex')
 </template>
@@ -54,20 +38,23 @@ import { loadDatasets, readImagePaths, createDatasets } from '@/utils/file'
 import { processExportAnnotation } from '@/utils/export'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
+import BBoxToolbar from '@/components/BBoxToolbar.vue'
 import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
 
 @Component({
   name: 'BBox',
-  components: { AnnotationList, LabelModal, ImagePreviewBottomBar }
+  components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BBoxToolbar }
 })
 export default class BBox extends Vue {
   datasets: Dataset[] = []
   datasetIndex = -1
-  selectedAnnotation: Annotation | null = null
+
   tool: paper.Tool | null = null
   selectedTool = 0
+
+  selectedAnnotation: Annotation | null = null
   onWheel = zoomOnWheel
   serverUrl = 'http://localhost:8000/file?filename='
 
@@ -91,10 +78,6 @@ export default class BBox extends Vue {
     return this.selectedAnnotation && this.selectedAnnotation.item.isInserted()
   }
 
-  get drawToolSelected() {
-    return this.selectedTool === 0
-  }
-
   get cursor() {
     switch (this.selectedTool) {
       case 0:
@@ -106,11 +89,6 @@ export default class BBox extends Vue {
       default:
         return 'default'
     }
-  }
-
-  onAnnotationSelect(annotation: Annotation) {
-    this.selectedAnnotation = null
-    this.$nextTick(() => (this.selectedAnnotation = annotation))
   }
 
   async openFile() {
@@ -183,15 +161,20 @@ export default class BBox extends Vue {
     resetZoom(new Paper.Point(width / 2, height / 2))
   }
 
+  async onAnnotationSelect(annotation: Annotation) {
+    this.selectedAnnotation = null
+    await this.$nextTick()
+    this.selectedAnnotation = annotation
+  }
+
   hideCurrentDataset() {
     if (!this.selectedDataset) return
 
-    if (this.selectedDataset.raster) this.selectedDataset.raster.remove()
+    Paper.project.activeLayer.removeChildren()
 
     this.selectedDataset.annotations = this.selectedDataset.annotations.filter(
       ({ item }) => !item.data.destroy
     )
-    this.selectedDataset.annotations.forEach(a => a.item.remove())
   }
 
   showDataset() {
@@ -239,7 +222,6 @@ export default class BBox extends Vue {
 
   async testSetup() {
     const folderPath = 'C:\\Users\\yongj\\Desktop\\imgs'
-
     const imagePaths = await readImagePaths(folderPath)
     this.datasets = createDatasets(imagePaths)
 
@@ -339,19 +321,11 @@ export default class BBox extends Vue {
 
     this.selectedAnnotation.item.remove()
     this.selectedAnnotation.item.data.destroy = true
+
     const userAction = new RemoveAction(this.selectedAnnotation.item)
     this.addUserAction(userAction)
+
     this.selectedAnnotation = null
-  }
-
-  onRemoveAnnotation() {
-    if (!this.selectedAnnotation) return
-
-    this.selectedAnnotation.item.remove()
-
-    const userAction = new RemoveAction(this.selectedAnnotation.item)
-
-    this.addUserAction(userAction)
   }
 
   onLabelEdit() {
