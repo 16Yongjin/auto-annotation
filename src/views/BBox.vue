@@ -30,14 +30,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import { Mutation } from 'vuex-class'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { UserAction, RemoveAction } from '@/models/user/actions'
-import {
-  zoomOnWheel,
-  resetZoom,
-  toDataUrl,
-  createMoveTool,
-  toCanvasContext
-} from '@/utils'
-import { runModel } from '@/utils/detect/yolo'
+import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
@@ -110,13 +103,9 @@ export default class BBox extends Vue {
     if (!this.selectedDataset?.raster) return
 
     const image = this.selectedDataset.raster.image
+    const dataUrl = toDataUrl(image)
 
-    const canvas = toCanvasContext(image)
-    const ctx = canvas.getContext('2d')
-
-    if (ctx) runModel(ctx)
-    // const dataUrl = toDataUrl(image)
-    // ipc.send('detect', dataUrl)
+    ipc.send('detect', dataUrl)
   }
 
   useBBoxDrawTool() {
@@ -251,6 +240,7 @@ export default class BBox extends Vue {
 
   async mounted() {
     this.setup()
+
     await this.testSetup()
 
     ipc.on('detect', this.onDetect.bind(this))

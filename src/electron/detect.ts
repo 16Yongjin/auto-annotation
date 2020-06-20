@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs-node'
 import * as cocoSsd from '@tensorflow-models/coco-ssd'
-import { ipcMain as ipc } from 'electron'
 import fetch, { Response, RequestInit } from 'node-fetch'
+import { ipcMain as ipc } from 'electron'
 import { readFile } from 'mz/fs'
 
 const removeProtocol = (url: string) => url.replace(/(^\w+:|^)\/\//, '')
