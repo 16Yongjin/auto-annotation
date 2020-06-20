@@ -7,7 +7,7 @@ v-navigation-drawer(absolute mini-variant permanent)
         v-icon fas fa-mask
         div detect
 
-      v-btn-toggle.flex-column(borderless v-model='selectedTool')
+      v-btn-toggle.flex-column(borderless :value='selectedTool')
         v-btn.toolbar-icon(text @click='useBBoxDrawTool')
           v-icon fas fa-vector-square
           div box

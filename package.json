@@ -29,6 +29,7 @@
     "mz": "^2.7.0",
     "ndarray": "^1.0.19",
     "ndarray-ops": "^1.2.2",
+    "ndarray-ops-typed": "^0.2.0",
     "node-fetch": "^2.6.0",
     "onnxjs": "^0.1.7",
     "onnxjs-node": "^0.4.1",

@@ -30,7 +30,14 @@ import { Component, Vue } from 'vue-property-decorator'
 import { Mutation } from 'vuex-class'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { UserAction, RemoveAction } from '@/models/user/actions'
-import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
+import {
+  zoomOnWheel,
+  resetZoom,
+  toDataUrl,
+  createMoveTool,
+  toCanvasContext
+} from '@/utils'
+import { runModel } from '@/utils/detect/yolo'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
@@ -38,14 +45,14 @@ import { loadDatasets, readImagePaths, createDatasets } from '@/utils/file'
 import { processExportAnnotation } from '@/utils/export'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
-import BBoxToolbar from '@/components/BBoxToolbar.vue'
+import BboxToolbar from '@/components/BBoxToolbar.vue'
 import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
 
 @Component({
   name: 'BBox',
-  components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BBoxToolbar }
+  components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BboxToolbar }
 })
 export default class BBox extends Vue {
   datasets: Dataset[] = []
@@ -91,7 +98,7 @@ export default class BBox extends Vue {
     }
   }
 
-  async openFile() {
+  async onFileOpen() {
     this.datasets = await loadDatasets()
 
     Paper.project.activeLayer.removeChildren()
@@ -99,13 +106,17 @@ export default class BBox extends Vue {
     this.selectDataset(0)
   }
 
-  async detectObject() {
+  async onDetectObject() {
     if (!this.selectedDataset?.raster) return
 
     const image = this.selectedDataset.raster.image
-    const dataUrl = toDataUrl(image)
 
-    ipc.send('detect', dataUrl)
+    const canvas = toCanvasContext(image)
+    const ctx = canvas.getContext('2d')
+
+    if (ctx) runModel(ctx)
+    // const dataUrl = toDataUrl(image)
+    // ipc.send('detect', dataUrl)
   }
 
   useBBoxDrawTool() {
@@ -286,7 +297,7 @@ export default class BBox extends Vue {
     } else if (key === 'Delete') {
       this.removeSelectedAnnotation()
     } else if (key === 'd') {
-      this.detectObject()
+      this.onDetectObject()
     } else if (key === 'b') {
       this.useBBoxDrawTool()
     } else if (key === 'e') {

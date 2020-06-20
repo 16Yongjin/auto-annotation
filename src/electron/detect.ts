@@ -4,8 +4,6 @@ import { ipcMain as ipc } from 'electron'
 import fetch, { Response, RequestInit } from 'node-fetch'
 import { readFile } from 'mz/fs'
 
-declare const __static: string
-
 const removeProtocol = (url: string) => url.replace(/(^\w+:|^)\/\//, '')
 
 const fetchFile = async (url: string) => {
