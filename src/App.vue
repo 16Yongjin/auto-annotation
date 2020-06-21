@@ -1,7 +1,7 @@
 <template lang="pug">
 v-app
   project-bar
-  v-content
+  v-content(style='margin-top: 56px;')
     router-view
 </template>
 

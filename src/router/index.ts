@@ -10,12 +10,12 @@ Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {
-    path: '/main',
+    path: '/',
     name: 'main',
     component: Main
   },
   {
-    path: '/',
+    path: '/bbox',
     name: 'bbox',
     component: BBox
   },

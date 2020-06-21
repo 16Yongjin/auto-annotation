@@ -95,6 +95,7 @@ export default class BBox extends Vue {
     this.datasets = await loadDatasets()
 
     Paper.project.activeLayer.removeChildren()
+
     this.datasetIndex = -1
     this.selectDataset(0)
   }
