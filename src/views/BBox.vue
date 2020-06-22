@@ -26,15 +26,15 @@ div.h100.rel.view
 
 <script lang="ts">
 import Paper from 'paper'
-import { Component, Vue } from 'vue-property-decorator'
-import { Mutation } from 'vuex-class'
+import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Mutation, Getter } from 'vuex-class'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { UserAction, RemoveAction } from '@/models/user/actions'
 import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
 import { createBBoxes, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
-import { loadDatasets, readImagePaths, createDatasets } from '@/utils/file'
+import { loadDatasets } from '@/utils/file'
 import { processExportAnnotation } from '@/utils/export'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
@@ -42,12 +42,15 @@ import BboxToolbar from '@/components/BBoxToolbar.vue'
 import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
+import { Project } from '../models/user/project'
 
 @Component({
   name: 'BBox',
   components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BboxToolbar }
 })
 export default class BBox extends Vue {
+  @Getter getProjectById!: Function
+
   datasets: Dataset[] = []
   datasetIndex = -1
 
@@ -209,6 +212,11 @@ export default class BBox extends Vue {
     }
   }
 
+  @Watch('$route.params.id')
+  onProjectChanged() {
+    this.setup()
+  }
+
   setup() {
     const canvas: HTMLCanvasElement | null = document.querySelector('canvas')
 
@@ -219,12 +227,14 @@ export default class BBox extends Vue {
     Paper.settings.handleSize = 8
 
     window.addEventListener('keydown', e => this.keyHandler(e))
-  }
 
-  async testSetup() {
-    const folderPath = 'C:\\Users\\yongj\\Desktop\\imgs'
-    const imagePaths = await readImagePaths(folderPath)
-    this.datasets = createDatasets(imagePaths)
+    ipc.on('detect', this.onDetect.bind(this))
+
+    const projectId = this.$route.params.id
+
+    const project = this.getProjectById(projectId) as Project
+
+    this.datasets = project.datasets
 
     this.selectDataset(0)
   }
@@ -242,13 +252,7 @@ export default class BBox extends Vue {
   async mounted() {
     this.setup()
 
-    await this.testSetup()
-
-    ipc.on('detect', this.onDetect.bind(this))
-
     this.useBBoxDrawTool()
-
-    this.openProject({ name: 'test', datasets: this.datasets })
   }
 
   exportAnnotation() {

@@ -38,6 +38,13 @@ export const createDatasets = (imagePaths: string[]) => {
   return datasets
 }
 
+export const createDatasetsFromPath = async (path: string) => {
+  const images = await readImagePaths(path)
+  const datasets = createDatasets(images)
+
+  return datasets
+}
+
 export const loadDatasets = async (): Promise<Dataset[]> => {
   const dirPath = await showFolderDialog()
   const imagePaths = await readImagePaths(dirPath)

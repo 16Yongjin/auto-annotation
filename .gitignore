@@ -2,6 +2,7 @@
 node_modules
 /dist
 /dist_electron
+db.json
 
 # local env files
 .env.local

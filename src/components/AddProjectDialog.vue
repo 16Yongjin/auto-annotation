@@ -1,42 +1,86 @@
 <template lang="pug">
-v-dialog(:value='active' max-width='600px')
+v-dialog(:value='active' max-width='600px' @outside="$emit('close')")
   template(v-slot:activator='{ on, attrs }')
     v-btn(text v-bind='attrs' v-on='on' @click="$emit('on')")
       v-icon fas fa-plus
   v-card
     v-card-title
-      span.headline User Profile
+      span.headline 새 프로젝트
     v-card-text
-      v-container
-        v-row
-          v-col(cols='12', sm='6', md='4')
-            v-text-field(label='Legal first name*', required)
-          v-col(cols='12', sm='6', md='4')
-            v-text-field(label='Legal middle name', hint='example of helper text only on focus')
-          v-col(cols='12', sm='6', md='4')
-            v-text-field(label='Legal last name*', hint='example of persistent helper text', persistent-hint, required)
-          v-col(cols='12')
-            v-text-field(label='Email*', required)
-          v-col(cols='12')
-            v-text-field(label='Password*', type='password', required)
-          v-col(cols='12', sm='6')
-            v-select(:items="['0-17', '18-29', '30-54', '54+']", label='Age*', required)
-          v-col(cols='12', sm='6')
-            v-autocomplete(:items="['Skiing', 'Ice hockey', 'Soccer', 'Basketball', 'Hockey', 'Reading', 'Writing', 'Coding', 'Basejump']", label='Interests', multiple)
-      small *indicates required field
+      v-form(v-model='valid')
+        v-container
+          v-row
+            v-col(cols='12')
+              v-text-field(
+                required
+                label='프로젝트 이름'
+                v-model='projectInfo.name'
+                :rules='[Boolean]')
+            v-col(cols='12')
+              v-text-field(
+                readonly
+                required
+                label='이미지 폴더'
+                v-model='projectInfo.path'
+                @click='selectFolder'
+                :rules='[Boolean]'
+                append-icon='fas fa-ellipsis-h')
+            v-col(cols='12')
+              v-select(
+                required
+                :items="['BBox', 'Segmentation']"
+                v-model='projectInfo.type'
+                label='프로젝트 타입'
+                :rules='[Boolean]')
     v-card-actions
       v-spacer
-      v-btn(color='blue darken-1', text, @click="$emit('close')") Close
-      v-btn(color='blue darken-1', text, @click="$emit('close')") Save
+      v-btn(text @click="$emit('close')") 닫기
+      v-btn(
+        text
+        color='blue darken-1'
+        :loading='loading'
+        :disabled='!valid'
+        @click="create") 생성
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
-import ProjectCard from '@/components/ProjectCard.vue'
+import { Action } from 'vuex-class'
+import { showFolderDialog } from '@/utils/file'
+import { ProjectInfo, Project } from '@/models/user/project'
 
-@Component({ components: { ProjectCard } })
+@Component
 export default class AddProjectDialog extends Vue {
   @Prop() active!: boolean
+
+  valid = false
+  loading = false
+
+  projectInfo: ProjectInfo = {
+    id: '',
+    name: 'test',
+    type: 'BBox',
+    path: 'C:\\Users\\yongj\\Desktop\\imgs',
+    createdAt: ''
+  }
+
+  @Action createProject!: Function
+
+  async selectFolder() {
+    this.projectInfo.path = await showFolderDialog()
+  }
+
+  async create() {
+    this.loading = true
+
+    const project: Project = await this.createProject(this.projectInfo)
+
+    console.log('project', project)
+
+    this.$router.push(`/bbox/${project.info.id}`)
+
+    this.loading = false
+  }
 }
 </script>
 

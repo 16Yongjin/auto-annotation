@@ -5,22 +5,29 @@ div.d-flex.flex-column.flex-grow-1
     v-spacer
     v-btn(text)
       v-icon fas fa-file-import
-    add-project-dialog(:active='dialog' @on='dialog = true' @close='dialog = false' @outside='dialog = false')
+    add-project-dialog(
+      :active='dialog'
+      @on='dialog = true'
+      @close='dialog = false')
 
   v-container(fluid)
     v-row(dense)
-      project-card(v-for='i in 20' :key='i' :project='dummyProject')
+      project-card(v-for='project in projects' :key='project.id' :project='project')
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import axios from 'axios'
 import ProjectCard from '@/components/ProjectCard.vue'
 import AddProjectDialog from '@/components/AddProjectDialog.vue'
 import { ProjectInfo } from '@/models/user/project'
 
 @Component({ components: { ProjectCard, AddProjectDialog } })
 export default class RecentlyViewed extends Vue {
+  projects: ProjectInfo[] = []
+
   dummyProject: ProjectInfo = {
+    id: '123',
     name: 'text',
     type: 'BBox',
     path: 'C:\\Users\\yongj\\Desktop\\imgs',
@@ -28,6 +35,12 @@ export default class RecentlyViewed extends Vue {
   }
 
   dialog = false
+
+  async mounted() {
+    const { data } = await axios.get('http://localhost:8000/projects')
+
+    this.projects = data
+  }
 }
 </script>
 

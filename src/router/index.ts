@@ -15,7 +15,7 @@ const routes: Array<RouteConfig> = [
     component: Main
   },
   {
-    path: '/bbox',
+    path: '/bbox/:id',
     name: 'bbox',
     component: BBox
   },
