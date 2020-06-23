@@ -1,6 +1,6 @@
 <template lang="pug">
 div.d-flex.flex-column.flex-grow-1
-  v-toolbar.main-toolbar.fill-width(elevation='0')
+  v-toolbar.toolbar.fill-width(elevation='0')
     .title Recently Viewed
     v-spacer
     v-btn(text)
@@ -12,15 +12,15 @@ div.d-flex.flex-column.flex-grow-1
 
   v-container(fluid)
     v-row(dense)
-      project-card(v-for='project in projects' :key='project.id' :project='project')
+      project-card(v-for='project in projects' :key='project.id' :project='project' @delete='onProjectDelete')
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import axios from 'axios'
 import ProjectCard from '@/components/ProjectCard.vue'
 import AddProjectDialog from '@/components/AddProjectDialog.vue'
 import { ProjectInfo } from '@/models/user/project'
+import { db } from '@/electron/db'
 
 @Component({ components: { ProjectCard, AddProjectDialog } })
 export default class RecentlyViewed extends Vue {
@@ -31,21 +31,31 @@ export default class RecentlyViewed extends Vue {
     name: 'text',
     type: 'BBox',
     path: 'C:\\Users\\yongj\\Desktop\\imgs',
-    createdAt: '2020-06-21 19:25'
+    createdAt: '2020-06-21 19:25',
+    lastSelectedIndex: 0
   }
 
   dialog = false
 
-  async mounted() {
-    const { data } = await axios.get('http://localhost:8000/projects')
+  loadProject() {
+    this.projects = db
+      .get('projects')
+      .map('info')
+      .value()
+  }
 
-    this.projects = data
+  activated() {
+    this.loadProject()
+  }
+
+  onProjectDelete() {
+    this.loadProject()
   }
 }
 </script>
 
 <style scoped>
-.main-toolbar {
+.toolbar {
   position: fixed;
   top: 56px;
   width: calc(100% - 256px);

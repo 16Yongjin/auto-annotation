@@ -47,7 +47,8 @@ v-dialog(:value='active' max-width='600px' @outside="$emit('close')")
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Action } from 'vuex-class'
 import { showFolderDialog } from '@/utils/file'
-import { ProjectInfo, Project } from '@/models/user/project'
+import { ProjectInfo } from '@/models/user/project'
+import { DBProject } from '../models/db'
 
 @Component
 export default class AddProjectDialog extends Vue {
@@ -61,7 +62,8 @@ export default class AddProjectDialog extends Vue {
     name: 'test',
     type: 'BBox',
     path: 'C:\\Users\\yongj\\Desktop\\imgs',
-    createdAt: ''
+    createdAt: '',
+    lastSelectedIndex: 0
   }
 
   @Action createProject!: Function
@@ -73,7 +75,7 @@ export default class AddProjectDialog extends Vue {
   async create() {
     this.loading = true
 
-    const project: Project = await this.createProject(this.projectInfo)
+    const project: DBProject = await this.createProject(this.projectInfo)
 
     console.log('project', project)
 

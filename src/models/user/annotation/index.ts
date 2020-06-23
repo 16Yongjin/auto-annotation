@@ -10,5 +10,4 @@ export interface Dataset {
   path: string
   raster?: paper.Raster
   annotations: Annotation[]
-  labeled: boolean
 }

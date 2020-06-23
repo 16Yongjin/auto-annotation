@@ -1,8 +1,6 @@
 <template lang="pug">
 v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
-      v-btn.toolbar-icon(text @click='onFileOpen')
-        v-icon fas fa-file
       v-btn.toolbar-icon(text @click='onDetectObject')
         v-icon fas fa-mask
         div detect
@@ -35,7 +33,6 @@ import HorizontalScroller from '@/components/HorizontalScroller.vue'
 
 @Component({ components: { HorizontalScroller } })
 export default class BBoxToolbar extends Vue {
-  @Prop() private onFileOpen!: Function
   @Prop() private onDetectObject!: Function
   @Prop() private useBBoxDrawTool!: Function
   @Prop() private useBBoxEditTool!: Function

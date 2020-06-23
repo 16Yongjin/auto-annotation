@@ -1,29 +1,52 @@
 import { Module } from 'vuex'
-import axios from 'axios'
+import { v4 as uuidv4 } from 'uuid'
+import { db } from '@/electron/db'
 import { ProjectInfo, Project } from '@/models/user/project/index'
 import { ProjectState } from './types'
 import { RootState } from '@/store/types'
+import { createDBDatasetsFromPath } from '@/utils/file'
+import { DBProject } from '@/models/db'
+import { importAnnotation } from '@/utils/import'
 
 const projectModule: Module<ProjectState, RootState> = {
   state: {
-    activeProjects: [],
-    currentProjectIndex: -1
+    activeProjects: []
   },
   mutations: {
     openProject(state, project: Project) {
       state.activeProjects.push(project)
-
-      state.currentProjectIndex = state.activeProjects.length - 1
     }
   },
   actions: {
-    async createProject({ commit }, projectInfo: ProjectInfo) {
-      const { data } = await axios.post<Project>(
-        'http://localhost:8000/projects',
-        projectInfo
-      )
-      commit('openProject', data)
-      return data
+    async createProject({ dispatch }, projectInfo: ProjectInfo) {
+      projectInfo.createdAt = new Date().toString()
+      projectInfo.id = uuidv4()
+      projectInfo.lastSelectedIndex = 0
+
+      const datasets = await createDBDatasetsFromPath(projectInfo.path)
+      const dbProject: DBProject = { info: projectInfo, datasets }
+
+      await db
+        .get('projects')
+        .push(dbProject)
+        .write()
+
+      dispatch('openProject', projectInfo.id)
+
+      return dbProject
+    },
+    openProject({ commit }, id: string) {
+      const dbProject = db
+        .get('projects')
+        .find({ info: { id } })
+        .value()
+
+      const project: Project = {
+        info: dbProject.info,
+        datasets: importAnnotation(dbProject.datasets)
+      }
+
+      commit('openProject', project)
     }
   },
   getters: {

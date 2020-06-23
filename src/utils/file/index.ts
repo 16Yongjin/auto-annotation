@@ -1,7 +1,7 @@
+import { BBoxDataset } from '@/models/db'
 import path from 'path'
 import { remote } from 'electron'
 import { readdir } from 'mz/fs'
-import { Dataset } from '@/models/user/annotation'
 
 export const showFolderDialog = async () => {
   const { filePaths, canceled } = await remote.dialog.showOpenDialog({
@@ -28,27 +28,26 @@ export const readImagePaths = async (dirPath: string) => {
   return imagePaths
 }
 
-export const createDatasets = (imagePaths: string[]) => {
+export const createDBDatasets = (imagePaths: string[]): BBoxDataset[] => {
   const datasets = imagePaths.map(path => ({
     path,
-    annotations: [],
-    labeled: false
+    annotations: []
   }))
 
   return datasets
 }
 
-export const createDatasetsFromPath = async (path: string) => {
+export const createDBDatasetsFromPath = async (path: string) => {
   const images = await readImagePaths(path)
-  const datasets = createDatasets(images)
+  const datasets = createDBDatasets(images)
 
   return datasets
 }
 
-export const loadDatasets = async (): Promise<Dataset[]> => {
+export const loadDBDatasets = async (): Promise<BBoxDataset[]> => {
   const dirPath = await showFolderDialog()
   const imagePaths = await readImagePaths(dirPath)
-  const datasets = createDatasets(imagePaths)
+  const datasets = createDBDatasets(imagePaths)
 
   return datasets
 }

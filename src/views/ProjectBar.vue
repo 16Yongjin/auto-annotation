@@ -1,10 +1,10 @@
 <template lang="pug">
 v-app-bar.project-toolbar(fixed dark elevation='0' height='56px')
   v-btn-toggle.h100(borderless mandatory tile)
-    v-btn.h100(text @click='test' to="/" :class="isHome ? 'white' : 'black'" )
+    v-btn.h100(text to="/" :class="isHome ? 'white' : 'black'" )
       v-icon(:color="isHome ? 'black' : 'white'") fas fa-home
     v-btn.h100(text v-for='project, i in projects' :key='i' :to="`/bbox/${project.info.id}`")
-      span {{ project.info.name }} {{ project.info.id }}
+      span {{ project.info.name }}
 </template>
 
 <script lang="ts">
@@ -19,10 +19,6 @@ export default class ProjectBar extends Vue {
   get isHome() {
     return this.$route.name === 'main'
   }
-
-  test() {
-    console.log(this.projects)
-  }
 }
 </script>
 
@@ -34,9 +30,5 @@ export default class ProjectBar extends Vue {
 .project-toolbar.v-toolbar {
   width: 100%;
   flex: none;
-}
-
-.h100 {
-  height: 100% !important;
 }
 </style>

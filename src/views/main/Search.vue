@@ -1,19 +1,48 @@
 <template lang="pug">
-div.d-flex.flex-column.flex-grow-1.justify-center.align-center
-  v-toolbar.main-toolbar.fill-width(elevation='0')
-    v-text-field(hide-details prepend-icon='fas fa-search' placeholder='Search' single-line)
-  div Type something to start searching
+div.flex-grow-1
+  v-toolbar.toolbar.fill-width(elevation='0')
+    v-text-field(v-model='query' hide-details prepend-icon='fas fa-search' placeholder='Search' single-line)
+  v-container.fill-height.align-start
+    v-row.fill-height.justify-center.align-center(v-if='!query')
+      div Type something to start searching
+    v-row(v-else-if='projects.length' dense)
+      project-card(v-for='project in projects' :key='project.id' :project='project' @delete='onProjectDelete')
+    v-row.fill-height.justify-center.align-center(v-else)
+      div No project found
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
+import { ProjectInfo } from '@/models/user/project'
+import ProjectCard from '@/components/ProjectCard.vue'
+import { db } from '@/electron/db'
 
-@Component
-export default class SearchProject extends Vue {}
+@Component({ components: { ProjectCard } })
+export default class SearchProject extends Vue {
+  query = ''
+  projects: ProjectInfo[] = []
+
+  findProjects(query: string) {
+    return db
+      .get('projects')
+      .filter(p => p.info.name.includes(query))
+      .map('info')
+      .value()
+  }
+
+  @Watch('query')
+  onQueryChanged() {
+    this.projects = this.findProjects(this.query)
+  }
+
+  onProjectDelete() {
+    this.onQueryChanged()
+  }
+}
 </script>
 
 <style scoped>
-.main-toolbar {
+.toolbar {
   position: fixed;
   top: 56px;
   width: calc(100% - 256px);

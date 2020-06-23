@@ -2,7 +2,8 @@
 v-app
   project-bar
   v-content(style='margin-top: 56px;')
-    router-view
+    keep-alive
+      router-view
 </template>
 
 <script lang="ts">

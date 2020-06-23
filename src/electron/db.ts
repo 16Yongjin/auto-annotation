@@ -1,10 +1,10 @@
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
-import { Project } from '@/models/user/project'
+import { DBProject } from '@/models/db'
 
 const adapter = new FileSync(`${__static}/db.json`, {
   defaultValue: {
-    projects: [] as Project[]
+    projects: [] as DBProject[]
   }
 })
 

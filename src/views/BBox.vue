@@ -1,7 +1,6 @@
 <template lang="pug">
 div.h100.rel.view
   bbox-toolbar(
-    :onFileOpen='onFileOpen'
     :onDetectObject='onDetectObject'
     :useBBoxDrawTool='useBBoxDrawTool'
     :useBBoxEditTool='useBBoxEditTool'
@@ -31,10 +30,9 @@ import { Mutation, Getter } from 'vuex-class'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { UserAction, RemoveAction } from '@/models/user/actions'
 import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
-import { createBBoxes, createRaster } from '@/utils/show'
+import { createBBoxFromDetector, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
-import { loadDatasets } from '@/utils/file'
 import { processExportAnnotation } from '@/utils/export'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
@@ -42,7 +40,7 @@ import BboxToolbar from '@/components/BBoxToolbar.vue'
 import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
-import { Project } from '../models/user/project'
+import { Project } from '@/models/user/project'
 
 @Component({
   name: 'BBox',
@@ -92,15 +90,6 @@ export default class BBox extends Vue {
       default:
         return 'default'
     }
-  }
-
-  async onFileOpen() {
-    this.datasets = await loadDatasets()
-
-    Paper.project.activeLayer.removeChildren()
-
-    this.datasetIndex = -1
-    this.selectDataset(0)
   }
 
   async onDetectObject() {
@@ -182,7 +171,7 @@ export default class BBox extends Vue {
   }
 
   showDataset() {
-    if (!this.selectedDataset?.raster) return
+    if (!this.selectedDataset || !this.selectedDataset.raster) return
 
     const raster = this.selectedDataset.raster
     Paper.project.activeLayer.addChild(raster)
@@ -194,8 +183,6 @@ export default class BBox extends Vue {
   }
 
   async selectDataset(index: number) {
-    if (this.datasetIndex === index) return
-
     this.hideCurrentDataset()
     this.resetUserActions()
 
@@ -214,7 +201,9 @@ export default class BBox extends Vue {
 
   @Watch('$route.params.id')
   onProjectChanged() {
-    this.setup()
+    if (this.$route.name !== 'bbox') return
+
+    this.loadDatasets()
   }
 
   setup() {
@@ -230,17 +219,21 @@ export default class BBox extends Vue {
 
     ipc.on('detect', this.onDetect.bind(this))
 
+    this.loadDatasets()
+  }
+
+  loadDatasets() {
     const projectId = this.$route.params.id
 
     const project = this.getProjectById(projectId) as Project
 
     this.datasets = project.datasets
 
-    this.selectDataset(0)
+    this.selectDataset(project.info.lastSelectedIndex)
   }
 
   onDetect(event: Electron.IpcRendererEvent, predictions: DetectedObject[]) {
-    const bboxes = createBBoxes(predictions)
+    const bboxes = createBBoxFromDetector(predictions)
     bboxes.forEach(bbox => {
       bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
       bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
@@ -249,10 +242,22 @@ export default class BBox extends Vue {
     this.addAnnotations(bboxes)
   }
 
-  async mounted() {
-    this.setup()
+  created() {
+    console.log('created')
+  }
 
+  async mounted() {
+    console.log('mounted')
+    this.setup()
     this.useBBoxDrawTool()
+  }
+
+  activated() {
+    console.log('activated')
+  }
+
+  deactivated() {
+    console.log('deactivated')
   }
 
   exportAnnotation() {
