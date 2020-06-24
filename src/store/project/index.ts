@@ -47,6 +47,21 @@ const projectModule: Module<ProjectState, RootState> = {
       }
 
       commit('openProject', project)
+
+      return project
+    },
+    async getProjectById({ getters, dispatch }, id: string) {
+      const project = getters.getProjectById(id)
+
+      if (!project) {
+        console.log('loading project!')
+        const newProject = await dispatch('openProject', id)
+        console.log(newProject)
+
+        return newProject
+      }
+
+      return project
     }
   },
   getters: {

@@ -26,14 +26,14 @@ div.h100.rel.view
 <script lang="ts">
 import Paper from 'paper'
 import { Component, Vue, Watch } from 'vue-property-decorator'
-import { Mutation, Getter } from 'vuex-class'
+import { Mutation, Action } from 'vuex-class'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { UserAction, RemoveAction } from '@/models/user/actions'
 import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
 import { createBBoxFromDetector, createRaster } from '@/utils/show'
 import { createBBoxDrawTool } from '@/utils/draw'
 import { createBBoxEditTool } from '@/utils/edit'
-import { processExportAnnotation } from '@/utils/export'
+import { processExportAnnotation, serializeDataset } from '@/utils/export'
 import AnnotationList from '@/components/AnnotationList.vue'
 import LabelModal from '@/components/LabelModal.vue'
 import BboxToolbar from '@/components/BBoxToolbar.vue'
@@ -41,16 +41,28 @@ import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
 import { Project } from '@/models/user/project'
+import { db } from '@/electron/db'
 
 @Component({
   name: 'BBox',
   components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BboxToolbar }
 })
 export default class BBox extends Vue {
-  @Getter getProjectById!: Function
+  @Action getProjectById!: Function
 
-  datasets: Dataset[] = []
-  datasetIndex = -1
+  project: Project | null = null
+
+  get datasets() {
+    return this.project ? this.project.datasets : []
+  }
+
+  get datasetIndex() {
+    return this.project ? this.project.info.lastSelectedIndex : -1
+  }
+
+  set datasetIndex(index: number) {
+    this.project && (this.project.info.lastSelectedIndex = index)
+  }
 
   tool: paper.Tool | null = null
   selectedTool = 0
@@ -80,16 +92,9 @@ export default class BBox extends Vue {
   }
 
   get cursor() {
-    switch (this.selectedTool) {
-      case 0:
-        return 'crosshair'
-      case 1:
-        return 'all-scroll'
-      case 2:
-        return 'grab'
-      default:
-        return 'default'
-    }
+    const cursors = ['crosshair', 'all-scroll', 'grab']
+
+    return cursors[this.selectedTool] || 'default'
   }
 
   async onDetectObject() {
@@ -160,7 +165,7 @@ export default class BBox extends Vue {
     this.selectedAnnotation = annotation
   }
 
-  hideCurrentDataset() {
+  async hideCurrentDataset() {
     if (!this.selectedDataset) return
 
     Paper.project.activeLayer.removeChildren()
@@ -168,6 +173,10 @@ export default class BBox extends Vue {
     this.selectedDataset.annotations = this.selectedDataset.annotations.filter(
       ({ item }) => !item.data.destroy
     )
+
+    this.selectedAnnotation = null
+
+    await this.saveDataset()
   }
 
   showDataset() {
@@ -176,14 +185,22 @@ export default class BBox extends Vue {
     const raster = this.selectedDataset.raster
     Paper.project.activeLayer.addChild(raster)
 
+    this.selectedDataset.annotations.forEach(bbox => {
+      if (!bbox.item.onMouseDown) {
+        bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
+        bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
+        bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
+      }
+    })
     const annotations = this.selectedDataset.annotations.map(a => a.item)
+
     Paper.project.activeLayer.addChildren(annotations)
 
     this.resetZoom()
   }
 
   async selectDataset(index: number) {
-    this.hideCurrentDataset()
+    await this.hideCurrentDataset()
     this.resetUserActions()
 
     this.datasetIndex = index
@@ -196,14 +213,13 @@ export default class BBox extends Vue {
       const imageUrl = `${this.serverUrl}${this.selectedDataset.path}`
       const raster = await createRaster(imageUrl)
       this.selectedDataset.raster = raster
+      this.showDataset()
     }
   }
 
   @Watch('$route.params.id')
   onProjectChanged() {
-    if (this.$route.name !== 'bbox') return
-
-    this.loadDatasets()
+    if (this.$route.name === 'bbox') this.loadDatasets()
   }
 
   setup() {
@@ -215,21 +231,42 @@ export default class BBox extends Vue {
 
     Paper.settings.handleSize = 8
 
-    window.addEventListener('keydown', e => this.keyHandler(e))
+    window.addEventListener('keydown', this.keyHandler.bind(this))
 
     ipc.on('detect', this.onDetect.bind(this))
 
     this.loadDatasets()
   }
 
-  loadDatasets() {
+  async loadDatasets() {
     const projectId = this.$route.params.id
 
-    const project = this.getProjectById(projectId) as Project
+    this.project = (await this.getProjectById(projectId)) as Project
 
-    this.datasets = project.datasets
+    this.selectDataset(this.datasetIndex)
+  }
 
-    this.selectDataset(project.info.lastSelectedIndex)
+  async saveDataset() {
+    if (!this.selectedDataset) return
+
+    console.time('save')
+
+    const projectId = this.$route.params.id
+    const path = this.selectedDataset.path
+    const lastSelectedIndex = this.datasetIndex
+
+    console.log('lastSelectedIndex', lastSelectedIndex)
+
+    await db
+      .get('projects')
+      .find({ info: { id: projectId } })
+      .set('info.lastSelectedIndex', lastSelectedIndex)
+      .get('datasets')
+      .find({ path })
+      .assign(serializeDataset(this.selectedDataset))
+      .write()
+
+    console.timeEnd('save')
   }
 
   onDetect(event: Electron.IpcRendererEvent, predictions: DetectedObject[]) {
@@ -258,6 +295,7 @@ export default class BBox extends Vue {
 
   deactivated() {
     console.log('deactivated')
+    this.saveDataset()
   }
 
   exportAnnotation() {
@@ -288,25 +326,24 @@ export default class BBox extends Vue {
   }
 
   keyHandler({ ctrlKey, shiftKey, key }: KeyboardEvent) {
+    if (this.$route.name !== 'bbox') return
+
+    if (key === 'Delete') {
+      this.removeSelectedAnnotation()
+    }
+
+    if (this.selectedAnnotation) return
+
     if (ctrlKey && key.toLowerCase() === 'z') {
       shiftKey ? this.redo() : this.undo()
-    } else if (key === 'ArrowLeft') {
-      this.prevDataset()
-    } else if (key === 'ArrowRight') {
-      this.nextDataset()
-    } else if (key === 'Delete') {
-      this.removeSelectedAnnotation()
-    } else if (key === 'd') {
-      this.onDetectObject()
-    } else if (key === 'b') {
-      this.useBBoxDrawTool()
-    } else if (key === 'e') {
-      this.useBBoxEditTool()
-    } else if (key === 'm') {
-      this.useMoveTool()
-    } else if (key === 'c') {
-      this.clearAnnotation()
-    }
+    } else if (key === 'ArrowLeft') this.prevDataset()
+    else if (key === 'ArrowRight') this.nextDataset()
+    else if (key === 'd') this.onDetectObject()
+    else if (key === 'b') this.useBBoxDrawTool()
+    else if (key === 'e') this.useBBoxEditTool()
+    else if (key === 'm') this.useMoveTool()
+    else if (key === 'c') this.clearAnnotation()
+    else if (ctrlKey && key === 's') this.saveDataset()
   }
 
   prevDataset() {
@@ -346,19 +383,6 @@ export default class BBox extends Vue {
 </script>
 
 <style scoped>
-.expand {
-  width: 100%;
-  height: 100%;
-}
-
-.h100 {
-  height: 100%;
-}
-
-.rel {
-  position: relative;
-}
-
 .view {
   padding: 0 0 0 56px;
 }

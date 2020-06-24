@@ -2,7 +2,7 @@
 v-app
   project-bar
   v-content(style='margin-top: 56px;')
-    keep-alive
+    keep-alive(include='BBox')
       router-view
 </template>
 

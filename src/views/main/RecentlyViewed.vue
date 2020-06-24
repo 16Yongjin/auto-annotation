@@ -44,7 +44,7 @@ export default class RecentlyViewed extends Vue {
       .value()
   }
 
-  activated() {
+  mounted() {
     this.loadProject()
   }
 

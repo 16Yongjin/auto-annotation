@@ -59,9 +59,9 @@ export default class AddProjectDialog extends Vue {
 
   projectInfo: ProjectInfo = {
     id: '',
-    name: 'test',
+    name: 'two',
     type: 'BBox',
-    path: 'C:\\Users\\yongj\\Desktop\\imgs',
+    path: 'C:\\Users\\yongj\\Desktop\\imgs2',
     createdAt: '',
     lastSelectedIndex: 0
   }

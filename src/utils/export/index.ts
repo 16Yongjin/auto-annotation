@@ -24,3 +24,10 @@ export const processExportAnnotation = (datasets: Dataset[]) => {
 
   return exportData
 }
+
+export const serializeDataset = ({ annotations, path }: Dataset) => {
+  return {
+    path,
+    annotations: annotations.map(serializeAnnotation)
+  }
+}
