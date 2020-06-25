@@ -33,6 +33,11 @@ const userActionModule: Module<UserActionState, RootState> = {
       state.userActions = []
       state.redoActions = []
     }
+  },
+  getters: {
+    noUserAction(state) {
+      return !state.userActions.length && !state.redoActions.length
+    }
   }
 }
 

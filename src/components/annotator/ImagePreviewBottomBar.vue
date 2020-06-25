@@ -14,7 +14,7 @@ horizontal-scroller.img-container(ref='scroller')
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { Dataset } from '@/models/user/annotation'
-import HorizontalScroller from '@/components/HorizontalScroller.vue'
+import HorizontalScroller from '@/components/utils/HorizontalScroller.vue'
 
 @Component({ name: 'LabelModal', components: { HorizontalScroller } })
 export default class LabelModal extends Vue {
@@ -27,12 +27,17 @@ export default class LabelModal extends Vue {
     this.$emit('dataset-select', index)
   }
 
-  @Watch('datasetIndex')
-  onDatasetIndexChanged(v: number) {
-    const imageRef = this.$refs[`image-${v}`] as Vue[]
+  scrollIntoView(index: number) {
+    const imageRef = this.$refs[`image-${index}`] as Vue[]
     if (!imageRef || !imageRef[0]) return
     const imageDiv = imageRef[0].$el
     imageDiv.scrollIntoView()
+  }
+
+  @Watch('datasetIndex')
+  async onDatasetIndexChanged(index: number) {
+    await this.$nextTick()
+    this.scrollIntoView(index)
   }
 }
 </script>

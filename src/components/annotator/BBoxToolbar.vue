@@ -1,7 +1,7 @@
 <template lang="pug">
 v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
-      v-btn.toolbar-icon(text @click='onDetectObject')
+      v-btn.toolbar-icon(text @click='onDetectObject' :loading='detectorLoading')
         v-icon fas fa-mask
         div detect
 
@@ -29,7 +29,7 @@ v-navigation-drawer(absolute mini-variant permanent)
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
-import HorizontalScroller from '@/components/HorizontalScroller.vue'
+import HorizontalScroller from '@/components/utils/HorizontalScroller.vue'
 
 @Component({ components: { HorizontalScroller } })
 export default class BBoxToolbar extends Vue {
@@ -41,6 +41,7 @@ export default class BBoxToolbar extends Vue {
   @Prop() private resetZoom!: Function
   @Prop() private exportAnnotation!: Function
   @Prop() private selectedTool!: number
+  @Prop() private detectorLoading!: boolean
 }
 </script>
 

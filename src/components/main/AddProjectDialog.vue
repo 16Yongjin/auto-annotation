@@ -48,7 +48,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Action } from 'vuex-class'
 import { showFolderDialog } from '@/utils/file'
 import { ProjectInfo } from '@/models/user/project'
-import { DBProject } from '../models/db'
+import { DBProject } from '@/models/db'
 
 @Component
 export default class AddProjectDialog extends Vue {

@@ -1,7 +1,7 @@
 import * as tf from '@tensorflow/tfjs-node'
 import * as cocoSsd from '@tensorflow-models/coco-ssd'
 import fetch, { Response, RequestInit } from 'node-fetch'
-import { ipcMain as ipc } from 'electron'
+import { ipcMain as ipc } from 'electron-better-ipc'
 import { readFile } from 'mz/fs'
 
 const removeProtocol = (url: string) => url.replace(/(^\w+:|^)\/\//, '')
@@ -36,7 +36,7 @@ export const detectObject = async (dataURL: string) => {
   return predictions
 }
 
-ipc.on('detect', async (event, dataUrl) => {
+ipc.answerRenderer('detect', async (dataUrl: string) => {
   const prediction = await detectObject(dataUrl)
-  event.reply('detect', prediction)
+  return prediction
 })

@@ -17,8 +17,8 @@ div.d-flex.flex-column.flex-grow-1
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import ProjectCard from '@/components/ProjectCard.vue'
-import AddProjectDialog from '@/components/AddProjectDialog.vue'
+import ProjectCard from '@/components/main/ProjectCard.vue'
+import AddProjectDialog from '@/components/main/AddProjectDialog.vue'
 import { ProjectInfo } from '@/models/user/project'
 import { db } from '@/electron/db'
 

@@ -7,7 +7,7 @@ export type OnAction = (e: UserAction) => void
 export abstract class UserAction {
   item: any
 
-  constructor(item: paper.Item) {
+  constructor(item: paper.Item | paper.Item[]) {
     this.item = item
   }
 
@@ -39,6 +39,38 @@ export class RemoveAction extends UserAction {
   redo() {
     this.item.remove()
     this.item.data.destroy = true
+  }
+}
+
+export class MultipleDrawAction extends UserAction {
+  undo() {
+    this.item.forEach((item: paper.Item) => {
+      item.remove()
+      item.data.destroy = true
+    })
+  }
+
+  redo() {
+    this.item.forEach((item: paper.Item) => {
+      Paper.project.activeLayer.addChild(item)
+      item.data.destroy = false
+    })
+  }
+}
+
+export class MultipleRemoveAction extends UserAction {
+  undo() {
+    this.item.forEach((item: paper.Item) => {
+      Paper.project.activeLayer.addChild(item)
+      item.data.destroy = false
+    })
+  }
+
+  redo() {
+    this.item.forEach((item: paper.Item) => {
+      item.remove()
+      item.data.destroy = true
+    })
   }
 }
 

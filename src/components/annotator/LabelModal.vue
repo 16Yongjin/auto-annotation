@@ -21,7 +21,7 @@ draggable-container.label-modal(:style='posStyle' ref='modalContainer')
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import Paper from 'paper'
-import DraggableContainer from '@/components/DraggableContainer.vue'
+import DraggableContainer from '@/components/utils/DraggableContainer.vue'
 import { Annotation } from '@/models/user/annotation'
 
 @Component({ name: 'LabelModal', components: { DraggableContainer } })

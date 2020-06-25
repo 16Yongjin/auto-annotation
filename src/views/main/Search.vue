@@ -14,7 +14,7 @@ div.flex-grow-1
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { ProjectInfo } from '@/models/user/project'
-import ProjectCard from '@/components/ProjectCard.vue'
+import ProjectCard from '@/components/main/ProjectCard.vue'
 import { db } from '@/electron/db'
 
 @Component({ components: { ProjectCard } })

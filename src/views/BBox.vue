@@ -9,6 +9,7 @@ div.h100.rel.view
     :resetZoom='resetZoom'
     :exportAnnotation='exportAnnotation'
     :selectedTool='selectedTool'
+    :detectorLoading='detectorLoading'
   )
 
   v-container.canvas-container.pa-0(fluid)
@@ -26,31 +27,62 @@ div.h100.rel.view
 <script lang="ts">
 import Paper from 'paper'
 import { Component, Vue, Watch } from 'vue-property-decorator'
-import { Mutation, Action } from 'vuex-class'
-import { Annotation, Dataset } from '@/models/user/annotation'
-import { UserAction, RemoveAction } from '@/models/user/actions'
-import { zoomOnWheel, resetZoom, toDataUrl, createMoveTool } from '@/utils'
-import { createBBoxFromDetector, createRaster } from '@/utils/show'
-import { createBBoxDrawTool } from '@/utils/draw'
-import { createBBoxEditTool } from '@/utils/edit'
-import { processExportAnnotation, serializeDataset } from '@/utils/export'
-import AnnotationList from '@/components/AnnotationList.vue'
-import LabelModal from '@/components/LabelModal.vue'
-import BboxToolbar from '@/components/BBoxToolbar.vue'
-import ImagePreviewBottomBar from '@/components/ImagePreviewBottomBar.vue'
+import { Mutation, Action, Getter } from 'vuex-class'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
+import { debounce } from 'lodash'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
+import { Annotation, Dataset } from '@/models/user/annotation'
 import { Project } from '@/models/user/project'
 import { db } from '@/electron/db'
+import {
+  UserAction,
+  RemoveAction,
+  MultipleDrawAction,
+  MultipleRemoveAction
+} from '@/models/user/actions'
+import {
+  zoomOnWheel,
+  resetZoom,
+  toDataUrl,
+  createMoveTool,
+  createBBoxFromDetector,
+  createRaster,
+  createBBoxDrawTool,
+  createBBoxEditTool,
+  processExportAnnotation,
+  serializeDataset
+} from '@/utils'
+import AnnotationList from '@/components/annotator/AnnotationList.vue'
+import LabelModal from '@/components/annotator/LabelModal.vue'
+import BboxToolbar from '@/components/annotator/BBoxToolbar.vue'
+import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.vue'
+
+enum Tool {
+  Draw,
+  Edit,
+  Move
+}
 
 @Component({
   name: 'BBox',
   components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BboxToolbar }
 })
 export default class BBox extends Vue {
-  @Action getProjectById!: Function
-
   project: Project | null = null
+  tool: paper.Tool | null = null
+  selectedAnnotation: Annotation | null = null
+  selectedTool = Tool.Draw
+  detectorLoading = false
+
+  onWheel = zoomOnWheel
+  serverUrl = 'http://localhost:8000/file?filename='
+
+  @Action getProjectById!: Function
+  @Mutation undo!: Function
+  @Mutation redo!: Function
+  @Mutation addUserAction!: Function
+  @Mutation resetUserActions!: Function
+  @Getter noUserAction!: boolean
 
   get datasets() {
     return this.project ? this.project.datasets : []
@@ -63,19 +95,6 @@ export default class BBox extends Vue {
   set datasetIndex(index: number) {
     this.project && (this.project.info.lastSelectedIndex = index)
   }
-
-  tool: paper.Tool | null = null
-  selectedTool = 0
-
-  selectedAnnotation: Annotation | null = null
-  onWheel = zoomOnWheel
-  serverUrl = 'http://localhost:8000/file?filename='
-
-  @Mutation undo!: Function
-  @Mutation redo!: Function
-  @Mutation addUserAction!: Function
-  @Mutation resetUserActions!: Function
-  @Mutation openProject!: Function
 
   get selectedDataset(): Dataset | undefined {
     return this.datasets[this.datasetIndex]
@@ -98,12 +117,23 @@ export default class BBox extends Vue {
   }
 
   async onDetectObject() {
-    if (!this.selectedDataset?.raster) return
+    if (this.detectorLoading || !this.selectedDataset?.raster) return
+
+    this.detectorLoading = true
 
     const image = this.selectedDataset.raster.image
     const dataUrl = toDataUrl(image)
+    const predictions = await ipc.callMain<string, DetectedObject[]>(
+      'detect',
+      dataUrl
+    )
+    const bboxes = createBBoxFromDetector(predictions)
+    bboxes.forEach(bbox => this.attachBBoxInteraction(bbox))
+    const items = bboxes.map(b => b.item)
+    this.addUserAction(new MultipleDrawAction(items))
+    this.addAnnotations(bboxes)
 
-    ipc.send('detect', dataUrl)
+    this.detectorLoading = false
   }
 
   useBBoxDrawTool() {
@@ -111,39 +141,39 @@ export default class BBox extends Vue {
     this.tool = createBBoxDrawTool((userAction: UserAction) => {
       this.addUserAction(userAction)
 
-      const bbox = userAction.item as paper.Path.Rectangle
-      const userBBox = { item: bbox, label: 'untitled' }
-      bbox.onMouseDown = this.onBBoxMouseDown(userBBox)
-      bbox.onMouseEnter = this.onBBoxMouseEnter(userBBox)
-      bbox.onMouseLeave = this.onBBoxMouseLeave(userBBox)
-
-      this.addAnnotations([userBBox])
-      this.selectedAnnotation = userBBox
+      const item = userAction.item as paper.Path.Rectangle
+      const bbox = { item, label: 'untitled' }
+      this.attachBBoxInteraction(bbox)
+      this.addAnnotations([bbox])
+      this.selectedAnnotation = bbox
     })
-    this.selectedTool = 0
+    this.selectedTool = Tool.Draw
   }
 
   useBBoxEditTool() {
     this.removeTool()
-    this.tool = createBBoxEditTool((userAction: UserAction) => {
-      this.addUserAction(userAction)
-    })
-    this.selectedTool = 1
+    this.tool = createBBoxEditTool(this.addUserAction.bind(this))
+    this.selectedTool = Tool.Edit
   }
 
   useMoveTool() {
     this.removeTool()
     this.tool = createMoveTool()
-    this.selectedTool = 2
+    this.selectedTool = Tool.Move
   }
 
   clearAnnotation() {
     if (!this.selectedDataset) return
 
-    this.selectedDataset.annotations.forEach(i => i.item.remove())
-    this.selectedDataset.annotations = []
+    const items = this.selectedDataset.annotations.map(a => a.item)
+
+    items.forEach(item => {
+      item.remove()
+      item.data.destroy = true
+    })
+    this.addUserAction(new MultipleRemoveAction(items))
+
     this.selectedAnnotation = null
-    this.removeTool()
   }
 
   removeTool() {
@@ -186,11 +216,7 @@ export default class BBox extends Vue {
     Paper.project.activeLayer.addChild(raster)
 
     this.selectedDataset.annotations.forEach(bbox => {
-      if (!bbox.item.onMouseDown) {
-        bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
-        bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
-        bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
-      }
+      if (!bbox.item.onMouseDown) this.attachBBoxInteraction(bbox)
     })
     const annotations = this.selectedDataset.annotations.map(a => a.item)
 
@@ -217,6 +243,8 @@ export default class BBox extends Vue {
     }
   }
 
+  selectDatasetDebounced = debounce(this.selectDataset.bind(this), 25)
+
   @Watch('$route.params.id')
   onProjectChanged() {
     if (this.$route.name === 'bbox') this.loadDatasets()
@@ -233,7 +261,7 @@ export default class BBox extends Vue {
 
     window.addEventListener('keydown', this.keyHandler.bind(this))
 
-    ipc.on('detect', this.onDetect.bind(this))
+    ipc.on('dummy', () => null) // to fix ipc library bug
 
     this.loadDatasets()
   }
@@ -246,55 +274,34 @@ export default class BBox extends Vue {
     this.selectDataset(this.datasetIndex)
   }
 
-  async saveDataset() {
-    if (!this.selectedDataset) return
+  saveDataset() {
+    if (!this.selectedDataset || this.noUserAction) return
 
-    console.time('save')
-
-    const projectId = this.$route.params.id
+    const id = this.$route.params.id
     const path = this.selectedDataset.path
     const lastSelectedIndex = this.datasetIndex
 
-    console.log('lastSelectedIndex', lastSelectedIndex)
-
-    await db
-      .get('projects')
-      .find({ info: { id: projectId } })
+    db.get('projects')
+      .find({ info: { id } })
       .set('info.lastSelectedIndex', lastSelectedIndex)
       .get('datasets')
       .find({ path })
       .assign(serializeDataset(this.selectedDataset))
       .write()
-
-    console.timeEnd('save')
   }
 
-  onDetect(event: Electron.IpcRendererEvent, predictions: DetectedObject[]) {
-    const bboxes = createBBoxFromDetector(predictions)
-    bboxes.forEach(bbox => {
-      bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
-      bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
-      bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
-    })
-    this.addAnnotations(bboxes)
-  }
-
-  created() {
-    console.log('created')
+  attachBBoxInteraction(bbox: Annotation) {
+    bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
+    bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
+    bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
   }
 
   async mounted() {
-    console.log('mounted')
     this.setup()
     this.useBBoxDrawTool()
   }
 
-  activated() {
-    console.log('activated')
-  }
-
   deactivated() {
-    console.log('deactivated')
     this.saveDataset()
   }
 
@@ -306,7 +313,7 @@ export default class BBox extends Vue {
 
   onBBoxMouseEnter(bbox: Annotation) {
     return () => {
-      if (this.selectedTool !== 1) return
+      if (this.selectedTool !== Tool.Edit) return
       if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.2
     }
   }
@@ -319,7 +326,7 @@ export default class BBox extends Vue {
 
   onBBoxMouseDown(bbox: Annotation) {
     return () => {
-      if (this.selectedTool !== 1) return
+      if (this.selectedTool !== Tool.Edit) return
       this.selectedAnnotation = bbox
       bbox.item.selected = true
     }
@@ -328,9 +335,7 @@ export default class BBox extends Vue {
   keyHandler({ ctrlKey, shiftKey, key }: KeyboardEvent) {
     if (this.$route.name !== 'bbox') return
 
-    if (key === 'Delete') {
-      this.removeSelectedAnnotation()
-    }
+    if (key === 'Delete') this.removeSelectedAnnotation()
 
     if (this.selectedAnnotation) return
 
@@ -348,14 +353,14 @@ export default class BBox extends Vue {
 
   prevDataset() {
     const datasetIndex = Math.max(this.datasetIndex - 1, 0)
-    this.selectDataset(datasetIndex)
+    this.selectDatasetDebounced(datasetIndex)
   }
 
   nextDataset() {
     const nextIndex = this.datasetIndex + 1
     const lastIndex = this.datasets.length - 1
     const datasetIndex = Math.min(nextIndex, lastIndex)
-    this.selectDataset(datasetIndex)
+    this.selectDatasetDebounced(datasetIndex)
   }
 
   addAnnotations(annotations: Annotation[]) {
@@ -369,10 +374,7 @@ export default class BBox extends Vue {
 
     this.selectedAnnotation.item.remove()
     this.selectedAnnotation.item.data.destroy = true
-
-    const userAction = new RemoveAction(this.selectedAnnotation.item)
-    this.addUserAction(userAction)
-
+    this.addUserAction(new RemoveAction(this.selectedAnnotation.item))
     this.selectedAnnotation = null
   }
 
