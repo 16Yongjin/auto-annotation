@@ -15,6 +15,9 @@ const projectModule: Module<ProjectState, RootState> = {
   mutations: {
     openProject(state, project: Project) {
       state.activeProjects.push(project)
+    },
+    closeProject(state, id: string) {
+      state.activeProjects = state.activeProjects.filter(p => p.info.id !== id)
     }
   },
   actions: {
