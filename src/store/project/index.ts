@@ -1,5 +1,6 @@
 import { Module } from 'vuex'
 import { v4 as uuidv4 } from 'uuid'
+import router from '@/router'
 import { db } from '@/electron/db'
 import { ProjectInfo, Project } from '@/models/user/project/index'
 import { ProjectState } from './types'
@@ -57,14 +58,26 @@ const projectModule: Module<ProjectState, RootState> = {
       const project = getters.getProjectById(id)
 
       if (!project) {
-        console.log('loading project!')
         const newProject = await dispatch('openProject', id)
-        console.log(newProject)
-
         return newProject
       }
 
       return project
+    },
+    closeProject({ state, commit }, id: string) {
+      const index = state.activeProjects.findIndex(p => p.info.id === id)
+      const activeProjectId = router.currentRoute.params.id
+
+      if (id === activeProjectId) {
+        const nextProject = state.activeProjects[index + 1]
+        const prevProject = state.activeProjects[index - 1]
+
+        if (nextProject) router.push(`/bbox/${nextProject.info.id}`)
+        else if (prevProject) router.push(`/bbox/${prevProject.info.id}`)
+        else router.push('/')
+      }
+
+      commit('closeProject', id)
     }
   },
   getters: {

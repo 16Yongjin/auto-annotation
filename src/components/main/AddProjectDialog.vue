@@ -77,8 +77,6 @@ export default class AddProjectDialog extends Vue {
 
     const project: DBProject = await this.createProject(this.projectInfo)
 
-    console.log('project', project)
-
     this.$router.push(`/bbox/${project.info.id}`)
 
     this.loading = false

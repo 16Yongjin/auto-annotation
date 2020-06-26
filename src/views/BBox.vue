@@ -78,11 +78,21 @@ export default class BBox extends Vue {
   serverUrl = 'http://localhost:8000/file?filename='
 
   @Action getProjectById!: Function
+  @Action closeProject!: Function
   @Mutation undo!: Function
   @Mutation redo!: Function
   @Mutation addUserAction!: Function
   @Mutation resetUserActions!: Function
   @Getter noUserAction!: boolean
+
+  mounted() {
+    this.setup()
+    this.useBBoxDrawTool()
+  }
+
+  deactivated() {
+    this.saveDataset()
+  }
 
   get datasets() {
     return this.project ? this.project.datasets : []
@@ -114,6 +124,10 @@ export default class BBox extends Vue {
     const cursors = ['crosshair', 'all-scroll', 'grab']
 
     return cursors[this.selectedTool] || 'default'
+  }
+
+  closeThisProject() {
+    this.closeProject(this.$route.params.id)
   }
 
   async onDetectObject() {
@@ -189,12 +203,6 @@ export default class BBox extends Vue {
     resetZoom(new Paper.Point(width / 2, height / 2))
   }
 
-  async onAnnotationSelect(annotation: Annotation) {
-    this.selectedAnnotation = null
-    await this.$nextTick()
-    this.selectedAnnotation = annotation
-  }
-
   async hideCurrentDataset() {
     if (!this.selectedDataset) return
 
@@ -256,80 +264,11 @@ export default class BBox extends Vue {
     if (!canvas) return
 
     Paper.setup(canvas)
-
     Paper.settings.handleSize = 8
-
     window.addEventListener('keydown', this.keyHandler.bind(this))
-
     ipc.on('dummy', () => null) // to fix ipc library bug
 
     this.loadDatasets()
-  }
-
-  async loadDatasets() {
-    const projectId = this.$route.params.id
-
-    this.project = (await this.getProjectById(projectId)) as Project
-
-    this.selectDataset(this.datasetIndex)
-  }
-
-  saveDataset() {
-    if (!this.selectedDataset || this.noUserAction) return
-
-    const id = this.$route.params.id
-    const path = this.selectedDataset.path
-    const lastSelectedIndex = this.datasetIndex
-
-    db.get('projects')
-      .find({ info: { id } })
-      .set('info.lastSelectedIndex', lastSelectedIndex)
-      .get('datasets')
-      .find({ path })
-      .assign(serializeDataset(this.selectedDataset))
-      .write()
-  }
-
-  attachBBoxInteraction(bbox: Annotation) {
-    bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
-    bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
-    bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
-  }
-
-  async mounted() {
-    this.setup()
-    this.useBBoxDrawTool()
-  }
-
-  deactivated() {
-    this.saveDataset()
-  }
-
-  exportAnnotation() {
-    const exportData = processExportAnnotation(this.datasets)
-
-    console.log(exportData)
-  }
-
-  onBBoxMouseEnter(bbox: Annotation) {
-    return () => {
-      if (this.selectedTool !== Tool.Edit) return
-      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.2
-    }
-  }
-
-  onBBoxMouseLeave(bbox: Annotation) {
-    return () => {
-      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.01
-    }
-  }
-
-  onBBoxMouseDown(bbox: Annotation) {
-    return () => {
-      if (this.selectedTool !== Tool.Edit) return
-      this.selectedAnnotation = bbox
-      bbox.item.selected = true
-    }
   }
 
   keyHandler({ ctrlKey, shiftKey, key }: KeyboardEvent) {
@@ -349,6 +288,64 @@ export default class BBox extends Vue {
     else if (key === 'm') this.useMoveTool()
     else if (key === 'c') this.clearAnnotation()
     else if (ctrlKey && key === 's') this.saveDataset()
+  }
+
+  async loadDatasets() {
+    const projectId = this.$route.params.id
+
+    this.project = (await this.getProjectById(projectId)) as Project
+
+    this.selectDataset(this.datasetIndex)
+  }
+
+  saveDataset() {
+    if (!this.selectedDataset || this.noUserAction) return
+
+    const id = this.$route.params.id
+    const path = this.selectedDataset.path
+    const datasetIndex = this.datasetIndex
+
+    db.get('projects')
+      .find({ info: { id } })
+      .set('info.lastSelectedIndex', datasetIndex)
+      .get('datasets')
+      .find({ path })
+      .assign(serializeDataset(this.selectedDataset))
+      .write()
+  }
+
+  exportAnnotation() {
+    const exportData = processExportAnnotation(this.datasets)
+    console.log(exportData)
+  }
+
+  attachBBoxInteraction(bbox: Annotation) {
+    bbox.item.onMouseDown = this.onBBoxMouseDown(bbox)
+    bbox.item.onMouseEnter = this.onBBoxMouseEnter(bbox)
+    bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
+  }
+
+  onBBoxMouseEnter(bbox: Annotation) {
+    return () => {
+      if (this.selectedTool !== Tool.Edit) return
+      bbox.item.selected = true
+      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.2
+    }
+  }
+
+  onBBoxMouseLeave(bbox: Annotation) {
+    return () => {
+      bbox.item.selected = false
+      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.01
+    }
+  }
+
+  onBBoxMouseDown(bbox: Annotation) {
+    return () => {
+      if (this.selectedTool !== Tool.Edit) return
+      this.selectedAnnotation = bbox
+      bbox.item.selected = true
+    }
   }
 
   prevDataset() {
@@ -376,6 +373,12 @@ export default class BBox extends Vue {
     this.selectedAnnotation.item.data.destroy = true
     this.addUserAction(new RemoveAction(this.selectedAnnotation.item))
     this.selectedAnnotation = null
+  }
+
+  async onAnnotationSelect(annotation: Annotation) {
+    this.selectedAnnotation = null
+    await this.$nextTick()
+    this.selectedAnnotation = annotation
   }
 
   onLabelEdit() {

@@ -6,37 +6,42 @@ v-app-bar.project-toolbar(fixed dark elevation='0' height='56px')
     v-btn.h100(text v-for='project, i in projects' :key='i' :to="`/bbox/${project.info.id}`")
       span {{ project.info.name }}
       v-btn.ml-2(icon small)
-        v-icon(small @click.prevent='close(i)') fas fa-window-close
+        v-icon(small @click.prevent='closeProject(project.info.id)') fas fa-window-close
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { Getter, Mutation } from 'vuex-class'
+import { Getter, Action } from 'vuex-class'
 import { Project } from '@/models/user/project'
 
 @Component
 export default class ProjectBar extends Vue {
   @Getter('activeProjects') projects!: Project[]
-  @Mutation closeProject!: Function
+  @Action closeProject!: Function
 
   get isHome() {
     return this.$route.name === 'main'
   }
 
-  close(index: number) {
-    const id = this.projects[index].info.id
-    const currentPageId = this.$route.params.id
+  get currentId() {
+    return this.$route.params.id
+  }
 
-    if (id === currentPageId) {
-      const nextProject = this.projects[index + 1]
-      const prevProject = this.projects[index - 1]
-
-      if (nextProject) this.$router.push(`/bbox/${nextProject.info.id}`)
-      else if (prevProject) this.$router.push(`/bbox/${prevProject.info.id}`)
-      else this.$router.push('/')
+  keyHandler({ ctrlKey, key }: KeyboardEvent) {
+    if (ctrlKey && key.match(/^\d+$/)) {
+      const project = this.projects[parseInt(key) - 1]
+      if (!project || this.currentId === project.info.id) return
+      this.$router.push(`/bbox/${project.info.id}`)
     }
 
-    this.closeProject(id)
+    if (this.isHome) return
+
+    if (ctrlKey && key === 'h') this.$router.push('/')
+    if (ctrlKey && key === 'w') this.closeProject(this.currentId)
+  }
+
+  mounted() {
+    window.addEventListener('keydown', this.keyHandler.bind(this))
   }
 }
 </script>
