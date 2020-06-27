@@ -1,8 +1,8 @@
 <template lang="pug">
 v-dialog(:value='active' max-width='600px' @outside="$emit('close')")
   template(v-slot:activator='{ on, attrs }')
-    v-btn(text v-bind='attrs' v-on='on' @click="$emit('on')")
-      v-icon fas fa-plus
+    v-btn(icon color='black' v-bind='attrs' v-on='on' @click="$emit('on')")
+      v-icon mdi-plus
   v-card
     v-card-title
       span.headline 새 프로젝트
@@ -24,7 +24,7 @@ v-dialog(:value='active' max-width='600px' @outside="$emit('close')")
                 v-model='projectInfo.path'
                 @click='selectFolder'
                 :rules='[Boolean]'
-                append-icon='fas fa-ellipsis-h')
+                append-icon='mdi-dots-horizontal')
             v-col(cols='12')
               v-select(
                 required

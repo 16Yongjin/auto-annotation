@@ -16,8 +16,5 @@ export default new Vuetify({
         warning: '#FFC107'
       }
     }
-  },
-  icons: {
-    iconfont: 'fa'
   }
 })

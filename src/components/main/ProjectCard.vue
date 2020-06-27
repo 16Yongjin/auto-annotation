@@ -7,7 +7,7 @@ v-col(md='4' xs='6' sm='6')
       v-menu(offset-y)
         template(v-slot:activator='{ on, attrs }')
           v-btn(icon v-bind='attrs', v-on='on')
-            v-icon fas fa-ellipsis-v
+            v-icon mdi-dots-vertical
         v-list
           v-list-item(@click='deleteProject')
             v-list-item-title 삭제

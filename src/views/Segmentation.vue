@@ -3,21 +3,21 @@ div.h100.rel.view
   v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
       v-btn.toolbar-icon(text @click='showSegmentation')
-        v-icon fas fa-mask
+        v-icon mdi-eye
       v-btn.toolbar-icon(text @click='useSegmentationDrawTool')
-        v-icon fas fa-pen-nib
+        v-icon mdi-vector-square
       v-btn.toolbar-icon(text @click='useSegmentationEditTool')
-        v-icon fas fa-edit
+        v-icon mdi-square-edit-outline
       v-btn.toolbar-icon(text @click='hideAnnotation')
-        v-icon fas fa-eye-slash
+        v-icon mdi-trash-can
 
       v-divider
       v-btn.toolbar-icon(text @click='removeTool')
-        v-icon fas fa-trash-alt
+        v-icon mdi-trash-can
       v-btn.toolbar-icon(text @click='resetZoom')
-        v-icon fas fa-expand
+        v-icon mdi-arrow-expand-all
       v-btn.toolbar-icon(text @click='exportAnnotation')
-        v-icon fas fa-file-export
+        v-icon mdi-file-download
         div export
 
   v-container.canvas-container.pa-0(fluid)

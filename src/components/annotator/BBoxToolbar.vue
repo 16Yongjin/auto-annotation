@@ -2,28 +2,29 @@
 v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
       v-btn.toolbar-icon(text @click='onDetectObject' :loading='detectorLoading')
-        v-icon fas fa-mask
+        v-icon mdi-eye
         div detect
 
       v-btn-toggle.flex-column(borderless :value='selectedTool')
         v-btn.toolbar-icon(text @click='useBBoxDrawTool')
-          v-icon fas fa-vector-square
+          v-icon mdi-vector-square
           div box
         v-btn.toolbar-icon(text @click='useBBoxEditTool')
-          v-icon fas fa-edit
+          v-icon mdi-square-edit-outline
           div edit
         v-btn.toolbar-icon(text @click='useMoveTool')
-          v-icon fas fa-hand-paper
+          v-icon mdi-hand-left
           div move
       v-btn.toolbar-icon(text @click='clearAnnotation')
-        v-icon fas fa-trash
+        v-icon mdi-trash-can
         div Clear
 
       v-divider
       v-btn.toolbar-icon(text @click='resetZoom')
-        v-icon fas fa-expand
+        v-icon mdi-arrow-expand-all
+        div zoom
       v-btn.toolbar-icon(text @click='exportAnnotation')
-        v-icon fas fa-file-export
+        v-icon mdi-file-download
         div export
 </template>
 

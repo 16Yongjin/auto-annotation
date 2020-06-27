@@ -1,7 +1,7 @@
 <template lang="pug">
 div.flex-grow-1
   v-toolbar.toolbar.fill-width(elevation='0')
-    v-text-field(v-model='query' hide-details prepend-icon='fas fa-search' placeholder='Search' single-line)
+    v-text-field(v-model='query' hide-details prepend-icon='mdi-magnify' placeholder='Search' single-line)
   v-container.fill-height.align-start
     v-row.fill-height.justify-center.align-center(v-if='!query')
       div Type something to start searching

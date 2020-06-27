@@ -3,8 +3,8 @@ div.d-flex.flex-column.flex-grow-1
   v-toolbar.toolbar.fill-width(elevation='0')
     .title Recently Viewed
     v-spacer
-    v-btn(text)
-      v-icon fas fa-file-import
+    v-btn(icon color='black')
+      v-icon mdi-import
     add-project-dialog(
       :active='dialog'
       @on='dialog = true'

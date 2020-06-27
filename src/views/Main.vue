@@ -19,7 +19,7 @@ import Search from '@/views/main/Search.vue'
 
 @Component({ components: { RecentlyViewed, Search } })
 export default class MainView extends Vue {
-  selectedMenuIndex = 0
+  selectedMenuIndex = 1
 
   get selectedComponent() {
     return this.menus[this.selectedMenuIndex].component
@@ -27,14 +27,14 @@ export default class MainView extends Vue {
 
   menus = [
     {
-      icon: 'fas fa-clock',
-      title: 'Recent',
-      component: 'RecentlyViewed'
-    },
-    {
-      icon: 'fas fa-search',
+      icon: 'mdi-magnify',
       title: 'Search',
       component: 'Search'
+    },
+    {
+      icon: 'mdi-clock',
+      title: 'Recent',
+      component: 'RecentlyViewed'
     }
   ]
 }
