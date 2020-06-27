@@ -199,8 +199,8 @@ export default class BBox extends Vue {
   resetZoom() {
     if (!this.selectedDataset?.raster) return
 
-    const { width, height } = this.selectedDataset.raster
-    resetZoom(new Paper.Point(width / 2, height / 2))
+    const { size } = this.selectedDataset.raster
+    resetZoom(size)
   }
 
   async hideCurrentDataset() {
@@ -220,6 +220,7 @@ export default class BBox extends Vue {
   showDataset() {
     if (!this.selectedDataset || !this.selectedDataset.raster) return
 
+    this.resetZoom()
     const raster = this.selectedDataset.raster
     Paper.project.activeLayer.addChild(raster)
 
@@ -227,10 +228,7 @@ export default class BBox extends Vue {
       if (!bbox.item.onMouseDown) this.attachBBoxInteraction(bbox)
     })
     const annotations = this.selectedDataset.annotations.map(a => a.item)
-
     Paper.project.activeLayer.addChildren(annotations)
-
-    this.resetZoom()
   }
 
   async selectDataset(index: number) {
@@ -241,14 +239,13 @@ export default class BBox extends Vue {
 
     if (!this.selectedDataset) return
 
-    if (this.selectedDataset.raster) {
-      this.showDataset()
-    } else {
+    if (!this.selectedDataset.raster) {
       const imageUrl = `${this.serverUrl}${this.selectedDataset.path}`
       const raster = await createRaster(imageUrl)
       this.selectedDataset.raster = raster
-      this.showDataset()
     }
+
+    this.showDataset()
   }
 
   selectDatasetDebounced = debounce(this.selectDataset.bind(this), 25)

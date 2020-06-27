@@ -2,6 +2,7 @@ import Paper, { Point } from 'paper'
 
 const ZOOM_FACTOR = 1.2
 const PAN_FACTOR = 0.5
+const IMAGE_PADDING = 100
 
 function changeZoom(delta: number, point: paper.Point) {
   const oldZoom = Paper.view.zoom
@@ -37,7 +38,15 @@ export function zoomOnWheel(e: WheelEvent) {
   return false
 }
 
-export function resetZoom(center: paper.Point) {
+export function resetZoom(image: paper.Size) {
+  const view = Paper.view.element
+  const center = new Point(image.width / 2, image.height / 2)
+  const zoom = Math.min(
+    view.width / (image.width + IMAGE_PADDING) / 2,
+    view.height / (image.height + IMAGE_PADDING) / 2,
+    1
+  )
+
   Paper.view.center = center
-  Paper.view.zoom = 1
+  Paper.view.zoom = zoom
 }

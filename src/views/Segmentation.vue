@@ -112,8 +112,7 @@ export default class Home extends Vue {
   resetZoom() {
     if (!this.image) return
 
-    const { width, height } = this.image
-    resetZoom(new Paper.Point(width / 2, height / 2))
+    resetZoom(this.image.size)
   }
 
   async imageSelect(image: string) {
