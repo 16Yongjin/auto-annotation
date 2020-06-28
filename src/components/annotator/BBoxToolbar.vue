@@ -6,10 +6,10 @@ v-navigation-drawer(absolute mini-variant permanent)
         div detect
 
       v-btn-toggle.flex-column(borderless :value='selectedTool')
-        v-btn.toolbar-icon(text @click='useBBoxDrawTool')
+        v-btn.toolbar-icon(text @click='useDrawTool')
           v-icon mdi-vector-square
           div box
-        v-btn.toolbar-icon(text @click='useBBoxEditTool')
+        v-btn.toolbar-icon(text @click='useEditTool')
           v-icon mdi-square-edit-outline
           div edit
         v-btn.toolbar-icon(text @click='useMoveTool')
@@ -35,8 +35,8 @@ import HorizontalScroller from '@/components/utils/HorizontalScroller.vue'
 @Component({ components: { HorizontalScroller } })
 export default class BBoxToolbar extends Vue {
   @Prop() private onDetectObject!: Function
-  @Prop() private useBBoxDrawTool!: Function
-  @Prop() private useBBoxEditTool!: Function
+  @Prop() private useDrawTool!: Function
+  @Prop() private useEditTool!: Function
   @Prop() private useMoveTool!: Function
   @Prop() private clearAnnotation!: Function
   @Prop() private resetZoom!: Function

@@ -1,0 +1,65 @@
+<template lang="pug">
+v-container.canvas-container.pa-0(fluid)
+    v-row.ma-0.h100
+      v-col.canvas-view.h100(cols='9')
+        canvas#canvas.expand(@wheel='onWheel' resize='true' :style='{ cursor }')
+      v-col.pa-0.h100(cols='3')
+        annotation-list.annotaion-list.h100(:annotations='annotationList' @select='onAnnotaionSelect')
+</template>
+
+<script lang="ts">
+import { Component, Prop, Vue } from 'vue-property-decorator'
+import Paper from 'paper'
+import { Dataset, Annotation } from '@/models/user/annotation'
+import { zoomOnWheel } from '@/utils'
+import AnnotationList from '@/components/annotator/AnnotationList.vue'
+
+@Component({ name: 'BBoxViewer', components: { AnnotationList } })
+export default class BBoxViewer extends Vue {
+  @Prop() private dataset!: Dataset | null
+  @Prop() private tool!: number
+  onWheel = zoomOnWheel
+
+  get annotationList() {
+    return this.dataset
+      ? this.dataset.annotations.filter(b => b.item.isInserted())
+      : []
+  }
+
+  get cursor() {
+    const cursors = ['crosshair', 'all-scroll', 'grab']
+
+    return cursors[this.tool] || 'default'
+  }
+
+  mounted() {
+    const canvas: HTMLCanvasElement | null = document.querySelector('canvas')
+
+    if (!canvas) return
+
+    Paper.setup(canvas)
+    Paper.settings.handleSize = 8
+  }
+
+  onAnnotaionSelect(annotation: Annotation) {
+    this.$emit('select', annotation)
+  }
+}
+</script>
+
+<style scoped>
+.canvas-container {
+  height: calc(100vh - 130px - 56px);
+}
+
+.canvas-view {
+  background: #c8c8c8;
+  padding: 0;
+}
+
+.annotaion-list {
+  width: 500px;
+  height: 100%;
+  overflow-y: auto;
+}
+</style>

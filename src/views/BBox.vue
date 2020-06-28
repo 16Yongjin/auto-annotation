@@ -2,8 +2,8 @@
 div.h100.rel.view
   bbox-toolbar(
     :onDetectObject='onDetectObject'
-    :useBBoxDrawTool='useBBoxDrawTool'
-    :useBBoxEditTool='useBBoxEditTool'
+    :useDrawTool='useBBoxDrawTool'
+    :useEditTool='useBBoxEditTool'
     :useMoveTool='useMoveTool'
     :clearAnnotation='clearAnnotation'
     :resetZoom='resetZoom'
@@ -12,12 +12,7 @@ div.h100.rel.view
     :detectorLoading='detectorLoading'
   )
 
-  v-container.canvas-container.pa-0(fluid)
-    v-row.ma-0.h100
-      v-col.canvas-view.h100(cols='9')
-        canvas#canvas.expand(@wheel='onWheel' resize='true' :style='{ cursor }')
-      v-col.pa-0.h100(cols='3')
-        annotation-list.annotaion-list.h100(:annotations='annotationList' @select='onAnnotationSelect')
+  bbox-viewer(:dataset='selectedDataset' :tool='selectedTool' @select='onAnnotationSelect')
 
   label-modal(v-if='showLabelModal' :annotation='selectedAnnotation' @clear='removeSelectedAnnotation' @ok='onLabelEdit')
 
@@ -33,7 +28,7 @@ import { debounce } from 'lodash'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
 import { Annotation, Dataset } from '@/models/user/annotation'
 import { Project } from '@/models/user/project'
-import { db } from '@/electron/db'
+import { db, saveDataset } from '@/electron/db'
 import {
   UserAction,
   RemoveAction,
@@ -41,7 +36,6 @@ import {
   MultipleRemoveAction
 } from '@/models/user/actions'
 import {
-  zoomOnWheel,
   resetZoom,
   toDataUrl,
   createMoveTool,
@@ -49,13 +43,13 @@ import {
   createRaster,
   createBBoxDrawTool,
   createBBoxEditTool,
-  processExportAnnotation,
-  serializeDataset
+  processExportAnnotation
 } from '@/utils'
 import AnnotationList from '@/components/annotator/AnnotationList.vue'
 import LabelModal from '@/components/annotator/LabelModal.vue'
 import BboxToolbar from '@/components/annotator/BBoxToolbar.vue'
 import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.vue'
+import BboxViewer from '@/components/annotator/BBoxViewer.vue'
 
 enum Tool {
   Draw,
@@ -65,7 +59,13 @@ enum Tool {
 
 @Component({
   name: 'BBox',
-  components: { AnnotationList, LabelModal, ImagePreviewBottomBar, BboxToolbar }
+  components: {
+    AnnotationList,
+    LabelModal,
+    ImagePreviewBottomBar,
+    BboxToolbar,
+    BboxViewer
+  }
 })
 export default class BBox extends Vue {
   project: Project | null = null
@@ -74,7 +74,6 @@ export default class BBox extends Vue {
   selectedTool = Tool.Draw
   detectorLoading = false
 
-  onWheel = zoomOnWheel
   serverUrl = 'http://localhost:8000/file?filename='
 
   @Action getProjectById!: Function
@@ -118,12 +117,6 @@ export default class BBox extends Vue {
 
   get showLabelModal() {
     return this.selectedAnnotation && this.selectedAnnotation.item.isInserted()
-  }
-
-  get cursor() {
-    const cursors = ['crosshair', 'all-scroll', 'grab']
-
-    return cursors[this.selectedTool] || 'default'
   }
 
   closeThisProject() {
@@ -232,12 +225,14 @@ export default class BBox extends Vue {
   }
 
   async selectDataset(index: number) {
-    await this.hideCurrentDataset()
     this.resetUserActions()
+    await this.hideCurrentDataset()
 
     this.datasetIndex = index
 
     if (!this.selectedDataset) return
+
+    this.saveDatasetIndex()
 
     if (!this.selectedDataset.raster) {
       const imageUrl = `${this.serverUrl}${this.selectedDataset.path}`
@@ -256,12 +251,6 @@ export default class BBox extends Vue {
   }
 
   setup() {
-    const canvas: HTMLCanvasElement | null = document.querySelector('canvas')
-
-    if (!canvas) return
-
-    Paper.setup(canvas)
-    Paper.settings.handleSize = 8
     window.addEventListener('keydown', this.keyHandler.bind(this))
     ipc.on('dummy', () => null) // to fix ipc library bug
 
@@ -295,20 +284,16 @@ export default class BBox extends Vue {
     this.selectDataset(this.datasetIndex)
   }
 
+  saveDatasetIndex() {
+    db.write()
+  }
+
   saveDataset() {
     if (!this.selectedDataset || this.noUserAction) return
 
     const id = this.$route.params.id
-    const path = this.selectedDataset.path
-    const datasetIndex = this.datasetIndex
 
-    db.get('projects')
-      .find({ info: { id } })
-      .set('info.lastSelectedIndex', datasetIndex)
-      .get('datasets')
-      .find({ path })
-      .assign(serializeDataset(this.selectedDataset))
-      .write()
+    return saveDataset(id, this.selectedDataset)
   }
 
   exportAnnotation() {
@@ -387,20 +372,5 @@ export default class BBox extends Vue {
 <style scoped>
 .view {
   padding: 0 0 0 56px;
-}
-
-.canvas-container {
-  height: calc(100vh - 130px - 56px);
-}
-
-.canvas-view {
-  background: #c8c8c8;
-  padding: 0;
-}
-
-.annotaion-list {
-  width: 500px;
-  height: 100%;
-  overflow-y: auto;
 }
 </style>
