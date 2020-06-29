@@ -28,11 +28,13 @@ export const readImagePaths = async (dirPath: string) => {
   return imagePaths
 }
 
+const toDataset = (path: string): BBoxDataset => ({
+  path,
+  annotations: []
+})
+
 export const createDBDatasets = (imagePaths: string[]): BBoxDataset[] => {
-  const datasets = imagePaths.map(path => ({
-    path,
-    annotations: []
-  }))
+  const datasets = imagePaths.map(toDataset)
 
   return datasets
 }

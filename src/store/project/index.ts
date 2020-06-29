@@ -7,7 +7,7 @@ import { ProjectState } from './types'
 import { RootState } from '@/store/types'
 import { createDBDatasetsFromPath } from '@/utils/file'
 import { DBProject } from '@/models/db'
-import { importAnnotation } from '@/utils/import'
+import { importAnnotation, validateDatasets } from '@/utils/import'
 
 const projectModule: Module<ProjectState, RootState> = {
   state: {
@@ -39,11 +39,15 @@ const projectModule: Module<ProjectState, RootState> = {
 
       return dbProject
     },
-    openProject({ commit }, id: string) {
+    async openProject({ commit }, id: string) {
       const dbProject = db
         .get('projects')
         .find({ info: { id } })
         .value()
+
+      dbProject.datasets = await validateDatasets(dbProject)
+
+      await db.write()
 
       const project: Project = {
         info: dbProject.info,
