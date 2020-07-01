@@ -81,4 +81,24 @@ export class BBoxEditTool extends Paper.Tool {
 
     this.bbox = null
   }
+
+  onKeyDown = ({ key, modifiers: { control, shift } }: paper.KeyEvent) => {
+    console.log(`${control ? 'control + ' : ''}${shift ? 'shift+ ' : ''}${key}`)
+    const item = Paper.project.activeLayer.getItem({ selected: true })
+    if (!item) return
+
+    if (key === 'left') {
+      if (control) item.bounds.width -= shift ? 10 : 1
+      else item.position.x -= shift ? 10 : 1
+    } else if (key === 'right') {
+      if (control) item.bounds.width += shift ? 10 : 1
+      else item.position.x += shift ? 10 : 1
+    } else if (key === 'up') {
+      if (control) item.bounds.height -= shift ? 10 : 1
+      else item.position.y -= shift ? 10 : 1
+    } else if (key === 'down') {
+      if (control) item.bounds.height += shift ? 10 : 1
+      else item.position.y += shift ? 10 : 1
+    }
+  }
 }

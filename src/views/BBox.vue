@@ -14,7 +14,12 @@ div.h100.rel.view
 
   bbox-viewer(:dataset='selectedDataset' :tool='selectedTool' @select='onAnnotationSelect')
 
-  label-modal(v-if='showLabelModal' :annotation='selectedAnnotation' @clear='removeSelectedAnnotation' @ok='onLabelEdit')
+  label-modal(
+    v-if='showLabelModal'
+    :annotation='selectedAnnotation'
+    @clear='removeSelectedAnnotation'
+    @ok='resetSelectedAnnotation'
+  )
 
   image-preview-bottom-bar(:datasets='datasets' @dataset-select='selectDataset' :dataset-index='datasetIndex')
 </template>
@@ -163,7 +168,7 @@ export default class BBox extends Vue {
       ({ item }) => !item.data.destroy
     )
 
-    this.selectedAnnotation = null
+    this.onAnnotationSelect(null)
 
     await this.saveDataset()
   }
@@ -206,7 +211,7 @@ export default class BBox extends Vue {
     this.selectedAnnotation.item.remove()
     this.selectedAnnotation.item.data.destroy = true
     this.addUserAction(new RemoveAction(this.selectedAnnotation.item))
-    this.selectedAnnotation = null
+    this.onAnnotationSelect(null)
   }
 
   prevDataset() {
@@ -251,7 +256,7 @@ export default class BBox extends Vue {
       const bbox = { item, label: 'untitled' }
       this.attachBBoxInteraction(bbox)
       this.addAnnotations([bbox])
-      this.selectedAnnotation = bbox
+      this.onAnnotationSelect(bbox)
     })
     this.selectedTool = Tool.Draw
   }
@@ -286,7 +291,7 @@ export default class BBox extends Vue {
     })
     this.addUserAction(new MultipleRemoveAction(items))
 
-    this.selectedAnnotation = null
+    this.onAnnotationSelect(null)
   }
 
   removeTool() {
@@ -321,23 +326,21 @@ export default class BBox extends Vue {
   onBBoxMouseEnter(bbox: Annotation) {
     return () => {
       if (this.selectedTool !== Tool.Edit) return
-      bbox.item.selected = true
       if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.2
     }
   }
 
   onBBoxMouseLeave(bbox: Annotation) {
     return () => {
-      bbox.item.selected = false
-      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.01
+      if (bbox.item.selected) return
+      bbox.item.fillColor = new Paper.Color('rgba(255,255,255,0.01)')
     }
   }
 
   onBBoxMouseDown(bbox: Annotation) {
     return () => {
       if (this.selectedTool !== Tool.Edit) return
-      this.selectedAnnotation = bbox
-      bbox.item.selected = true
+      this.onAnnotationSelect(bbox)
     }
   }
 
@@ -347,14 +350,29 @@ export default class BBox extends Vue {
     this.selectedDataset.annotations.push(...annotations)
   }
 
-  async onAnnotationSelect(annotation: Annotation) {
+  resetSelectedAnnotation() {
+    if (!this.selectedAnnotation) return
+
+    this.selectedAnnotation.item.fillColor = new Paper.Color(
+      'rgba(255,255,255,0.01)'
+    )
     this.selectedAnnotation = null
-    await this.$nextTick()
-    this.selectedAnnotation = annotation
   }
 
-  onLabelEdit() {
-    this.selectedAnnotation = null
+  async onAnnotationSelect(annotation: Annotation | null) {
+    Paper.project.activeLayer.selected = false
+
+    if (!annotation || this.selectedAnnotation === annotation) {
+      return this.resetSelectedAnnotation()
+    }
+
+    this.resetSelectedAnnotation()
+
+    await this.$nextTick()
+
+    annotation.item.selected = true
+    annotation.item.fillColor = new Paper.Color('rgba(0,255,0,0.2)')
+    this.selectedAnnotation = annotation
   }
 }
 </script>
