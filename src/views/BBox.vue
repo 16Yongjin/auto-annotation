@@ -42,7 +42,7 @@ import {
   createBBoxFromDetector,
   createRaster,
   createBBoxDrawTool,
-  createBBoxEditTool,
+  BBoxEditTool,
   processExportAnnotation
 } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
@@ -184,12 +184,13 @@ export default class BBox extends Vue {
     if (this.$route.name !== 'bbox') return
 
     if (key === 'Delete') this.removeSelectedAnnotation()
+    else if (ctrlKey && key.toLowerCase() === 'z') {
+      shiftKey ? this.redo() : this.undo()
+    }
 
     if (this.selectedAnnotation) return
 
-    if (ctrlKey && key.toLowerCase() === 'z') {
-      shiftKey ? this.redo() : this.undo()
-    } else if (key === 'ArrowLeft') this.prevDataset()
+    if (key === 'ArrowLeft') this.prevDataset()
     else if (key === 'ArrowRight') this.nextDataset()
     else if (key === 'd') this.onDetectObject()
     else if (key === 'b') this.useBBoxDrawTool()
@@ -257,7 +258,7 @@ export default class BBox extends Vue {
 
   useBBoxEditTool() {
     this.removeTool()
-    this.tool = createBBoxEditTool(this.addUserAction.bind(this))
+    this.tool = new BBoxEditTool(this.addUserAction.bind(this))
     this.selectedTool = Tool.Edit
   }
 
