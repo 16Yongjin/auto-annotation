@@ -1,4 +1,4 @@
-import Paper from 'paper'
+import Paper, { Point } from 'paper'
 import {
   OnAction,
   ResizeBBoxAction,
@@ -82,23 +82,39 @@ export class BBoxEditTool extends Paper.Tool {
     this.bbox = null
   }
 
+  resizeBBox(item: paper.Path.Rectangle, delta: paper.Point) {
+    item.data.prevBounds = item.bounds.clone()
+    item.bounds.width += delta.x
+    item.bounds.height += delta.y
+    this.onEdit(new ResizeBBoxAction(item))
+  }
+
+  moveBBox(item: paper.Path.Rectangle, delta: paper.Point) {
+    item.data.prevPosition = item.position.clone()
+    item.position = item.position.add(delta)
+    this.onEdit(new MoveBBoxAction(item))
+  }
+
   onKeyDown = ({ key, modifiers: { control, shift } }: paper.KeyEvent) => {
-    console.log(`${control ? 'control + ' : ''}${shift ? 'shift+ ' : ''}${key}`)
-    const item = Paper.project.activeLayer.getItem({ selected: true })
+    const item = Paper.project.activeLayer.getItem({
+      selected: true
+    }) as paper.Path.Rectangle
     if (!item) return
 
+    const delta = shift ? 10 : 1
+
     if (key === 'left') {
-      if (control) item.bounds.width -= shift ? 10 : 1
-      else item.position.x -= shift ? 10 : 1
+      if (control) this.resizeBBox(item, new Point(-delta, 0))
+      else this.moveBBox(item, new Point(-delta, 0))
     } else if (key === 'right') {
-      if (control) item.bounds.width += shift ? 10 : 1
-      else item.position.x += shift ? 10 : 1
+      if (control) this.resizeBBox(item, new Point(delta, 0))
+      else this.moveBBox(item, new Point(delta, 0))
     } else if (key === 'up') {
-      if (control) item.bounds.height -= shift ? 10 : 1
-      else item.position.y -= shift ? 10 : 1
+      if (control) this.resizeBBox(item, new Point(0, -delta))
+      else this.moveBBox(item, new Point(0, -delta))
     } else if (key === 'down') {
-      if (control) item.bounds.height += shift ? 10 : 1
-      else item.position.y += shift ? 10 : 1
+      if (control) this.resizeBBox(item, new Point(0, delta))
+      else this.moveBBox(item, new Point(0, delta))
     }
   }
 }
