@@ -27,9 +27,10 @@ import { Annotation } from '@/models/user/annotation'
 @Component({ name: 'LabelModal', components: { DraggableContainer } })
 export default class LabelModal extends Vue {
   @Prop() private annotation!: Annotation
+  @Prop() private focusOnShow!: boolean
 
   get posStyle() {
-    if (!this.annotation) return
+    // if (!this.annotation) return
 
     const annotationBounds = this.annotation.item.bounds
     const viewPos = Paper.view.bounds.point
@@ -54,7 +55,11 @@ export default class LabelModal extends Vue {
   }
 
   mounted() {
-    if (!this.annotation) return
+    if (this.focusOnShow) this.focus()
+  }
+
+  focus() {
+    // if (!this.annotation) return
 
     const labelText = this.$refs.labelText as Vue
     const labelInput = labelText.$el.querySelector('input')

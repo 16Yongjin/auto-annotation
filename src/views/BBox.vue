@@ -17,6 +17,7 @@ div.h100.rel.view
   label-modal(
     v-if='showLabelModal'
     :annotation='selectedAnnotation'
+    :focus-on-show='focusLabelModal'
     @clear='removeSelectedAnnotation'
     @ok='resetSelectedAnnotation'
   )
@@ -115,6 +116,10 @@ export default class BBox extends Vue {
     return this.selectedAnnotation && this.selectedAnnotation.item.isInserted()
   }
 
+  get focusLabelModal() {
+    return this.selectedTool !== Tool.Edit
+  }
+
   async loadDatasets() {
     const projectId = this.$route.params.id
 
@@ -189,6 +194,7 @@ export default class BBox extends Vue {
     if (this.$route.name !== 'bbox') return
 
     if (key === 'Delete') this.removeSelectedAnnotation()
+    else if (key === 'Escape') this.resetSelectedAnnotation()
     else if (ctrlKey && key.toLowerCase() === 'z') {
       shiftKey ? this.redo() : this.undo()
     }
@@ -203,15 +209,6 @@ export default class BBox extends Vue {
     else if (key === 'm') this.useMoveTool()
     else if (key === 'c') this.clearAnnotation()
     else if (ctrlKey && key === 's') this.saveDataset()
-  }
-
-  removeSelectedAnnotation() {
-    if (!this.selectedAnnotation) return
-
-    this.selectedAnnotation.item.remove()
-    this.selectedAnnotation.item.data.destroy = true
-    this.addUserAction(new RemoveAction(this.selectedAnnotation.item))
-    this.onAnnotationSelect(null)
   }
 
   prevDataset() {
@@ -350,7 +347,18 @@ export default class BBox extends Vue {
     this.selectedDataset.annotations.push(...annotations)
   }
 
+  removeSelectedAnnotation() {
+    if (!this.selectedAnnotation) return
+
+    this.selectedAnnotation.item.remove()
+    this.selectedAnnotation.item.data.destroy = true
+    this.addUserAction(new RemoveAction(this.selectedAnnotation.item))
+    this.onAnnotationSelect(null)
+  }
+
   resetSelectedAnnotation() {
+    Paper.project.activeLayer.selected = false
+
     if (!this.selectedAnnotation) return
 
     this.selectedAnnotation.item.fillColor = new Paper.Color(
@@ -360,13 +368,11 @@ export default class BBox extends Vue {
   }
 
   async onAnnotationSelect(annotation: Annotation | null) {
-    Paper.project.activeLayer.selected = false
-
-    if (!annotation || this.selectedAnnotation === annotation) {
-      return this.resetSelectedAnnotation()
-    }
+    if (this.selectedAnnotation === annotation) return
 
     this.resetSelectedAnnotation()
+
+    if (!annotation) return
 
     await this.$nextTick()
 
