@@ -13,6 +13,7 @@ div.flex-grow-1
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
+import { Action } from 'vuex-class'
 import { ProjectInfo } from '@/models/user/project'
 import ProjectCard from '@/components/main/ProjectCard.vue'
 import { db } from '@/electron/db'
@@ -21,6 +22,7 @@ import { db } from '@/electron/db'
 export default class SearchProject extends Vue {
   query = ''
   projects: ProjectInfo[] = []
+  @Action deleteProject!: Function
 
   findProjects(query: string) {
     return db
@@ -35,7 +37,8 @@ export default class SearchProject extends Vue {
     this.projects = this.findProjects(this.query)
   }
 
-  onProjectDelete() {
+  async onProjectDelete(id: string) {
+    await this.deleteProject(id)
     this.onQueryChanged()
   }
 }

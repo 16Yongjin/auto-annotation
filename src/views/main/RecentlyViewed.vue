@@ -21,9 +21,12 @@ import ProjectCard from '@/components/main/ProjectCard.vue'
 import AddProjectDialog from '@/components/main/AddProjectDialog.vue'
 import { ProjectInfo } from '@/models/user/project'
 import { db } from '@/electron/db'
+import { Action } from 'vuex-class'
 
 @Component({ components: { ProjectCard, AddProjectDialog } })
 export default class RecentlyViewed extends Vue {
+  @Action deleteProject!: Function
+
   projects: ProjectInfo[] = []
 
   dummyProject: ProjectInfo = {
@@ -48,7 +51,8 @@ export default class RecentlyViewed extends Vue {
     this.loadProject()
   }
 
-  onProjectDelete() {
+  async onProjectDelete(id: string) {
+    await this.deleteProject(id)
     this.loadProject()
   }
 }

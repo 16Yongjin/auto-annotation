@@ -35,7 +35,7 @@ const projectModule: Module<ProjectState, RootState> = {
         .push(dbProject)
         .write()
 
-      dispatch('openProject', projectInfo.id)
+      await dispatch('openProject', projectInfo.id)
 
       return dbProject
     },
@@ -59,6 +59,8 @@ const projectModule: Module<ProjectState, RootState> = {
       return project
     },
     async getProjectById({ getters, dispatch }, id: string) {
+      console.log('getProjectById')
+
       const project = getters.getProjectById(id)
 
       if (!project) {
@@ -82,6 +84,14 @@ const projectModule: Module<ProjectState, RootState> = {
       }
 
       commit('closeProject', id)
+    },
+    async deleteProject({ state }, id: string) {
+      await db
+        .get('projects')
+        .remove({ info: { id } })
+        .write()
+
+      state.activeProjects = state.activeProjects.filter(p => p.info.id !== id)
     }
   },
   getters: {
