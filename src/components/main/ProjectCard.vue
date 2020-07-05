@@ -19,28 +19,18 @@ v-col(md='4' xs='6' sm='6')
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
-import { Action } from 'vuex-class'
 import { ProjectInfo } from '@/models/user/project'
-import { db } from '@/electron/db'
 
 @Component
 export default class ProjectCard extends Vue {
   @Prop() project!: ProjectInfo
-  @Action openProject!: Function
 
   async open() {
-    this.$router.push(`/bbox/${this.project.id}`)
+    this.$router.push(`/${this.project.type.toLowerCase()}/${this.project.id}`)
   }
 
   async deleteProject() {
-    const { id } = this.project
-
-    await db
-      .get('projects')
-      .remove({ info: { id } })
-      .write()
-
-    this.$emit('delete')
+    this.$emit('delete', this.project.id)
   }
 }
 </script>
