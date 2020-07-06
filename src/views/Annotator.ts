@@ -3,25 +3,13 @@ import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Mutation, Action, Getter } from 'vuex-class'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { debounce } from 'lodash'
-import { Annotation, Dataset } from '@/models/user/annotation'
-import { Project } from '@/models/user/project'
 import { db, saveDataset } from '@/electron/db'
+import { Project } from '@/models/user/project'
+import { Annotation, Dataset } from '@/models/user/annotation'
 import { RemoveAction, MultipleRemoveAction } from '@/models/user/actions'
 import { resetZoom, createMoveTool, createRaster, Tool } from '@/utils'
-import LabelModal from '@/components/annotator/LabelModal.vue'
-import Toolbar from '@/components/annotator/segmentation/Toolbar.vue'
-import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.vue'
-import AnnotationViewer from '@/components/annotator/AnnotationViewer.vue'
 
-@Component({
-  name: 'Annotator',
-  components: {
-    LabelModal,
-    ImagePreviewBottomBar,
-    Toolbar,
-    AnnotationViewer
-  }
-})
+@Component({ name: 'Annotator' })
 export default class Annotator extends Vue {
   project: Project | null = null
   tool: paper.Tool | null = null

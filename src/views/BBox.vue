@@ -27,7 +27,7 @@ div.h100.rel.view
 
 <script lang="ts">
 import Paper from 'paper'
-import { Component, Watch } from 'vue-property-decorator'
+import { Component } from 'vue-property-decorator'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { DetectedObject } from '@tensorflow-models/coco-ssd'
 import { Annotation } from '@/models/user/annotation'
