@@ -1,6 +1,6 @@
 <template lang="pug">
 div.h100.rel.view
-  bbox-toolbar(
+  toolbar(
     :onDetectObject='onDetectObject'
     :useDrawTool='useBBoxDrawTool'
     :useEditTool='useBBoxEditTool'
@@ -12,7 +12,7 @@ div.h100.rel.view
     :detectorLoading='detectorLoading'
   )
 
-  bbox-viewer(:dataset='selectedDataset' :tool='selectedTool' @select='onAnnotationSelect')
+  annotation-viewer(:dataset='selectedDataset' :tool='selectedTool' @select='onAnnotationSelect')
 
   label-modal(
     v-if='showLabelModal'
@@ -52,9 +52,9 @@ import {
   processExportAnnotation
 } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
-import BboxToolbar from '@/components/annotator/BBoxToolbar.vue'
+import Toolbar from '@/components/annotator/bbox/Toolbar.vue'
 import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.vue'
-import BboxViewer from '@/components/annotator/BBoxViewer.vue'
+import AnnotationViewer from '@/components/annotator/AnnotationViewer.vue'
 
 enum Tool {
   Draw,
@@ -67,8 +67,8 @@ enum Tool {
   components: {
     LabelModal,
     ImagePreviewBottomBar,
-    BboxToolbar,
-    BboxViewer
+    Toolbar,
+    AnnotationViewer
   }
 })
 export default class BBox extends Vue {

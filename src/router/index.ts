@@ -3,7 +3,7 @@ import VueRouter, { RouteConfig } from 'vue-router'
 
 import Main from '@/views/Main.vue'
 import BBox from '@/views/BBox.vue'
-import Segmentation from '@/views/Segmentation.vue'
+import Segmentator from '@/views/Segmentator.vue'
 import PageNotFound from '@/views/PageNotFound.vue'
 
 Vue.use(VueRouter)
@@ -20,9 +20,9 @@ const routes: Array<RouteConfig> = [
     component: BBox
   },
   {
-    path: '/segmentation',
+    path: '/segmentation/:id',
     name: 'segmentation',
-    component: Segmentation
+    component: Segmentator
   },
   { path: '*', component: PageNotFound }
 ]
