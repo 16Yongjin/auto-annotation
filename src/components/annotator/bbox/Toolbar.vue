@@ -3,12 +3,12 @@ v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
       v-btn.toolbar-icon(text @click='onDetectObject' :loading='detectorLoading')
         v-icon mdi-eye
-        div detect
+        div vision
 
       v-btn-toggle.flex-column(borderless :value='selectedTool')
         v-btn.toolbar-icon(text @click='useDrawTool')
           v-icon mdi-vector-square
-          div box
+          div draw
         v-btn.toolbar-icon(text @click='useEditTool')
           v-icon mdi-square-edit-outline
           div edit

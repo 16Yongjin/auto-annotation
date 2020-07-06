@@ -1,5 +1,5 @@
 import Paper from 'paper'
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Mutation, Action, Getter } from 'vuex-class'
 import { ipcRenderer as ipc } from 'electron-better-ipc'
 import { debounce } from 'lodash'
@@ -7,17 +7,11 @@ import { Annotation, Dataset } from '@/models/user/annotation'
 import { Project } from '@/models/user/project'
 import { db, saveDataset } from '@/electron/db'
 import { RemoveAction, MultipleRemoveAction } from '@/models/user/actions'
-import { resetZoom, createMoveTool, createRaster } from '@/utils'
+import { resetZoom, createMoveTool, createRaster, Tool } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
 import Toolbar from '@/components/annotator/segmentation/Toolbar.vue'
 import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.vue'
 import AnnotationViewer from '@/components/annotator/AnnotationViewer.vue'
-
-enum Tool {
-  Draw,
-  Edit,
-  Move
-}
 
 @Component({
   name: 'Annotator',
@@ -45,11 +39,23 @@ export default class Annotator extends Vue {
   @Mutation resetUserActions!: Function
   @Getter noUserAction!: boolean
 
+  @Watch('$route.params.id')
+  onProjectChanged() {
+    if (this.isActivated) this.loadDatasets()
+  }
+
   mounted() {
     this.setup()
   }
 
+  activated() {
+    if (this.selectedTool === Tool.Draw) this.useDrawTool()
+    else if (this.selectedTool === Tool.Edit) this.useEditTool()
+    else if (this.selectedTool === Tool.Move) this.useMoveTool()
+  }
+
   deactivated() {
+    this.removeTool()
     this.saveDataset()
   }
 
@@ -75,6 +81,10 @@ export default class Annotator extends Vue {
 
   get focusLabelModal() {
     return this.selectedTool !== Tool.Edit
+  }
+
+  get isActivated() {
+    return this.$route.name === this.project?.info.type.toLowerCase()
   }
 
   async loadDatasets() {
@@ -140,13 +150,14 @@ export default class Annotator extends Vue {
   }
 
   setup() {
+    console.log('setup')
     ipc.on('dummy', () => null) // to fix ipc library bug
     window.addEventListener('keydown', e => this.keyHandler(e))
     this.loadDatasets()
   }
 
   keyHandler({ ctrlKey, shiftKey, key }: KeyboardEvent) {
-    if (this.$route.name !== 'segmentation') return
+    if (this.$route.name !== this.project?.info.type.toLowerCase()) return
 
     if (key === 'Delete') this.removeSelectedAnnotation()
     else if (key === 'Escape') this.resetSelectedAnnotation()
@@ -160,6 +171,9 @@ export default class Annotator extends Vue {
     else if (key === 'ArrowRight') this.nextDataset()
     else if (key === 'm') this.useMoveTool()
     else if (key === 'c') this.clearAnnotation()
+    else if (key === 'v') this.onDetectObject()
+    else if (key === 'b') this.useDrawTool()
+    else if (key === 'e') this.useEditTool()
     else if (ctrlKey && key === 's') this.saveDataset()
   }
 
@@ -173,6 +187,18 @@ export default class Annotator extends Vue {
     const lastIndex = this.datasets.length - 1
     const datasetIndex = Math.min(nextIndex, lastIndex)
     this.selectDatasetDebounced(datasetIndex)
+  }
+
+  onDetectObject() {
+    console.log('detect!')
+  }
+
+  useDrawTool() {
+    console.log('use DrawTool')
+  }
+
+  useEditTool() {
+    console.log('use EditTool')
   }
 
   useMoveTool() {
@@ -213,6 +239,8 @@ export default class Annotator extends Vue {
   }
 
   saveDataset() {
+    console.log('save!')
+
     if (!this.selectedDataset || this.noUserAction) return
 
     const id = this.$route.params.id

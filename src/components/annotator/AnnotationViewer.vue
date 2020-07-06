@@ -2,7 +2,7 @@
 v-container.canvas-container.pa-0(fluid)
     v-row.ma-0.h100
       v-col.canvas-view.h100(cols='9')
-        canvas#canvas.expand(@wheel='onWheel' resize='true' :style='{ cursor }')
+        canvas.expand(:id='canvasId' @wheel='onWheel' resize='true' :style='{ cursor }')
       v-col.pa-0.h100(cols='3')
         annotation-list.annotaion-list.h100(:annotations='annotationList' @select='onAnnotaionSelect')
 </template>
@@ -16,6 +16,7 @@ import AnnotationList from '@/components/annotator/AnnotationList.vue'
 
 @Component({ name: 'AnnotationViewer', components: { AnnotationList } })
 export default class AnnotationViewer extends Vue {
+  @Prop() private type!: string
   @Prop() private dataset!: Dataset | null
   @Prop() private tool!: number
   onWheel = zoomOnWheel
@@ -32,8 +33,28 @@ export default class AnnotationViewer extends Vue {
     return cursors[this.tool] || 'default'
   }
 
+  get canvasId() {
+    return `canvas-${this.type}`
+  }
+
+  activated() {
+    this.setupCanvas()
+  }
+
   mounted() {
-    const canvas: HTMLCanvasElement | null = document.querySelector('canvas')
+    this.setupCanvas()
+  }
+
+  setupCanvas() {
+    const existingCanvas = Paper.projects.find(
+      p => p.view.element.id === this.canvasId
+    )
+
+    if (existingCanvas) return existingCanvas.activate()
+
+    const canvas: HTMLCanvasElement | null = document.querySelector(
+      `#${this.canvasId}`
+    )
 
     if (!canvas) return
 

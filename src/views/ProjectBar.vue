@@ -3,7 +3,7 @@ v-app-bar.project-toolbar(fixed dark elevation='0' height='56px')
   v-btn-toggle.h100(borderless mandatory tile)
     v-btn.h100(text to="/" :class="isHome ? 'white' : 'black'" )
       v-icon(:color="isHome ? 'black' : 'white'") mdi-home
-    v-btn.h100(text v-for='project, i in projects' :key='i' :to="`/bbox/${project.info.id}`")
+    v-btn.h100(text v-for='project, i in projects' :key='project.info.id' :to="toUrl(project)")
       span.project-name {{ project.info.name }}
       v-btn.ml-2(icon small)
         v-icon(small @click.prevent='closeProject(project.info.id)') mdi-close-box
@@ -27,11 +27,15 @@ export default class ProjectBar extends Vue {
     return this.$route.params.id
   }
 
+  toUrl(project: Project) {
+    return `/${project.info.type.toLowerCase()}/${project.info.id}`
+  }
+
   keyHandler({ ctrlKey, key }: KeyboardEvent) {
     if (ctrlKey && key.match(/^\d+$/)) {
       const project = this.projects[parseInt(key) - 1]
       if (!project || this.currentId === project.info.id) return
-      this.$router.push(`/bbox/${project.info.id}`)
+      this.$router.push(this.toUrl(project))
     }
 
     if (this.isHome) return

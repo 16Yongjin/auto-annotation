@@ -10,3 +10,9 @@ export { createBBoxFromDetector, createRaster } from '@/utils/show'
 export { createBBoxDrawTool, createSegmentationDrawTool } from '@/utils/draw'
 export { BBoxEditTool, createSegmentationEditTool } from '@/utils/edit'
 export { processExportAnnotation, serializeDataset } from '@/utils/export'
+
+export enum Tool {
+  Draw,
+  Edit,
+  Move
+}

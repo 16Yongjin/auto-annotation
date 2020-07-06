@@ -2,8 +2,8 @@
 div.h100.rel.view
   toolbar(
     :onDetectObject='onDetectObject'
-    :useDrawTool='useSegmentationDrawTool'
-    :useEditTool='useSegmentationEditTool'
+    :useDrawTool='useDrawTool'
+    :useEditTool='useEditTool'
     :useMoveTool='useMoveTool'
     :clearAnnotation='clearAnnotation'
     :resetZoom='resetZoom'
@@ -12,7 +12,7 @@ div.h100.rel.view
     :detectorLoading='detectorLoading'
   )
 
-  annotation-viewer(:dataset='selectedDataset' :tool='selectedTool' @select='onAnnotationSelect')
+  annotation-viewer(:dataset='selectedDataset' :tool='selectedTool' @select='onAnnotationSelect' type='segmentator')
 
   label-modal(
     v-if='showLabelModal'
@@ -27,13 +27,14 @@ div.h100.rel.view
 
 <script lang="ts">
 import Paper from 'paper'
-import { Component, Watch } from 'vue-property-decorator'
+import { Component } from 'vue-property-decorator'
 import { Annotation } from '@/models/user/annotation'
 import { UserAction } from '@/models/user/actions'
 import {
   createSegmentationDrawTool,
   createSegmentationEditTool,
-  processExportAnnotation
+  processExportAnnotation,
+  Tool
 } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
 import Toolbar from '@/components/annotator/segmentation/Toolbar.vue'
@@ -41,14 +42,8 @@ import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.
 import AnnotationViewer from '@/components/annotator/AnnotationViewer.vue'
 import Annotator from '@/views/Annotator'
 
-enum Tool {
-  Draw,
-  Edit,
-  Move
-}
-
 @Component({
-  name: 'Segementation',
+  name: 'Segmentator',
   components: {
     LabelModal,
     ImagePreviewBottomBar,
@@ -57,36 +52,8 @@ enum Tool {
   },
   extends: Annotator
 })
-export default class Segmentation extends Annotator {
-  serverUrl = 'http://localhost:8000/file?filename='
-
-  @Watch('$route.params.id')
-  onProjectChanged() {
-    if (this.$route.name === 'segmentation') super.loadDatasets()
-  }
-
-  mounted() {
-    this.setupSegmentator()
-  }
-
-  setupSegmentator() {
-    window.addEventListener('keydown', e => this.segmentatorKeyHandler(e))
-    this.useSegmentationDrawTool()
-  }
-
-  segmentatorKeyHandler(e: KeyboardEvent) {
-    if (this.$route.name !== 'segmentation') return
-    if (this.selectedAnnotation) return
-
-    if (e.key === 'd') this.useSegmentationDrawTool()
-    else if (e.key === 'e') this.useSegmentationEditTool()
-  }
-
-  onDetectObject() {
-    console.log('detect!')
-  }
-
-  useSegmentationDrawTool() {
+export default class Segmentator extends Annotator {
+  useDrawTool() {
     this.removeTool()
     this.tool = createSegmentationDrawTool((userAction: UserAction) => {
       this.addUserAction(userAction)
@@ -100,7 +67,7 @@ export default class Segmentation extends Annotator {
     this.selectedTool = Tool.Draw
   }
 
-  useSegmentationEditTool() {
+  useEditTool() {
     this.removeTool()
     this.tool = createSegmentationEditTool(this.addUserAction.bind(this))
     this.selectedTool = Tool.Edit
