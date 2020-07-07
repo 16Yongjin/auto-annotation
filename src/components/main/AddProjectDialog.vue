@@ -48,7 +48,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Action } from 'vuex-class'
 import { showFolderDialog } from '@/utils/file'
 import { ProjectInfo } from '@/models/user/project'
-import { DBProject } from '@/models/db'
+import { DBProject, AnnotationType } from '@/models/db'
 
 @Component
 export default class AddProjectDialog extends Vue {
@@ -75,7 +75,9 @@ export default class AddProjectDialog extends Vue {
   async create() {
     this.loading = true
 
-    const project: DBProject = await this.createProject(this.projectInfo)
+    const project: DBProject<AnnotationType> = await this.createProject(
+      this.projectInfo
+    )
 
     this.$router.push(`/${project.info.type.toLowerCase()}/${project.info.id}`)
 

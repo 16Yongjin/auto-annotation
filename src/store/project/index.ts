@@ -6,8 +6,8 @@ import { ProjectInfo, Project } from '@/models/user/project/index'
 import { ProjectState } from './types'
 import { RootState } from '@/store/types'
 import { createDBDatasetsFromPath } from '@/utils/file'
-import { DBProject } from '@/models/db'
-import { importAnnotation, validateDatasets } from '@/utils/import'
+import { DBProject, BBoxDataset, BBox, AnnotationType } from '@/models/db'
+import { validateBBoxDatasets, importBBox } from '@/utils/import'
 
 const projectModule: Module<ProjectState, RootState> = {
   state: {
@@ -28,7 +28,10 @@ const projectModule: Module<ProjectState, RootState> = {
       projectInfo.lastSelectedIndex = 0
 
       const datasets = await createDBDatasetsFromPath(projectInfo.path)
-      const dbProject: DBProject = { info: projectInfo, datasets }
+      const dbProject: DBProject<AnnotationType> = {
+        info: projectInfo,
+        datasets
+      }
 
       await db
         .get('projects')
@@ -45,13 +48,15 @@ const projectModule: Module<ProjectState, RootState> = {
         .find({ info: { id } })
         .value()
 
-      dbProject.datasets = await validateDatasets(dbProject)
+      dbProject.datasets = await validateBBoxDatasets(
+        dbProject as DBProject<BBox>
+      )
 
       await db.write()
 
       const project: Project = {
         info: dbProject.info,
-        datasets: importAnnotation(dbProject.datasets)
+        datasets: importBBox(dbProject.datasets as BBoxDataset[])
       }
 
       commit('openProject', project)

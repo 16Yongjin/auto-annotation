@@ -1,12 +1,12 @@
 import { Dataset } from '@/models/user/annotation'
 import low from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
-import { DBProject } from '@/models/db'
+import { DBProject, AnnotationType } from '@/models/db'
 import { serializeDataset } from '@/utils'
 
 const adapter = new FileSync(`${__static}/db.json`, {
   defaultValue: {
-    projects: [] as DBProject[]
+    projects: [] as DBProject<AnnotationType>[]
   }
 })
 

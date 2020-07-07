@@ -160,7 +160,7 @@ export default class Annotator extends Vue {
     else if (key === 'm') this.useMoveTool()
     else if (key === 'c') this.clearAnnotation()
     else if (key === 'v') this.onDetectObject()
-    else if (key === 'b') this.useDrawTool()
+    else if (key === 'd') this.useDrawTool()
     else if (key === 'e') this.useEditTool()
     else if (ctrlKey && key === 's') this.saveDataset()
   }

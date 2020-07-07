@@ -3,21 +3,34 @@ export interface BBox {
   bbox: number[]
 }
 
-export interface BBoxDataset {
-  path: string
-  annotations: BBox[]
+export interface Segmentation {
+  label: string
+  segmentation: number[]
 }
+
+export type AnnotationType = BBox | Segmentation
+
+export interface Dataset<T extends AnnotationType> {
+  path: string
+  annotations: T[]
+}
+
+export type BBoxDataset = Dataset<BBox>
+
+export type SegmentationDataset = Dataset<Segmentation>
+
+type ProjectType = 'BBox' | 'Segmentation'
 
 export interface ProjectInfo {
   id: string
   name: string
-  type: string
+  type: ProjectType
   path: string
   createdAt: string
   lastSelectedIndex: number
 }
 
-export interface DBProject {
+export interface DBProject<T extends AnnotationType> {
   info: ProjectInfo
-  datasets: BBoxDataset[]
+  datasets: Dataset<T>[]
 }
