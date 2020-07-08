@@ -38,7 +38,7 @@ import {
   BBoxEditTool,
   createBBoxDrawTool,
   createBBoxFromDetector,
-  processExportAnnotation
+  processExportBBox
 } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
 import Toolbar from '@/components/annotator/bbox/Toolbar.vue'
@@ -98,7 +98,7 @@ export default class BBox extends Annotator {
   }
 
   exportAnnotation() {
-    const exportData = processExportAnnotation(this.datasets)
+    const exportData = processExportBBox(this.datasets)
     console.log(exportData)
   }
 

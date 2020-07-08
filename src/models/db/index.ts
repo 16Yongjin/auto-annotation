@@ -5,7 +5,7 @@ export interface BBox {
 
 export interface Segmentation {
   label: string
-  segmentation: number[]
+  segmentation: number[][]
 }
 
 export type AnnotationType = BBox | Segmentation
@@ -34,3 +34,5 @@ export interface DBProject<T extends AnnotationType> {
   info: ProjectInfo
   datasets: Dataset<T>[]
 }
+
+export type DBProjectType = DBProject<AnnotationType>

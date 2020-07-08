@@ -33,7 +33,6 @@ import { UserAction } from '@/models/user/actions'
 import {
   createSegmentationDrawTool,
   createSegmentationEditTool,
-  processExportAnnotation,
   Tool
 } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
@@ -74,8 +73,7 @@ export default class Segmentator extends Annotator {
   }
 
   exportAnnotation() {
-    const exportData = processExportAnnotation(this.datasets)
-    console.log(exportData)
+    console.log('export!')
   }
 
   attachAnnotationInteraction(bbox: Annotation) {

@@ -1,2 +1,2 @@
-export { createBBoxDrawTool } from './drawBBox'
-export { createSegmentationDrawTool } from './drawSegmentation'
+export * from './bbox'
+export * from './segmentation'

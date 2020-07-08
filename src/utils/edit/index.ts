@@ -1,2 +1,2 @@
-export { createSegmentationEditTool } from './editSegmentation'
-export { BBoxEditTool } from './editBBox'
+export * from './segmentation'
+export * from './bbox'

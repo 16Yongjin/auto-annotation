@@ -1,16 +1,22 @@
-import { DBProject, BBoxDataset, BBox } from '@/models/db'
+import {
+  BBoxDataset,
+  AnnotationType,
+  Dataset as DBDataset,
+  DBProjectType,
+  SegmentationDataset
+} from '@/models/db'
 import { Dataset } from '@/models/user/annotation'
-import { readImagePaths, createDBDatasets } from '@/utils/file/index'
-import { createBBoxesFromDB } from '@/utils/show/bbox'
+import { readImagePaths, createDatasets } from '@/utils/file/index'
+import { createBBoxesFromDB, createSegmentationFromDB } from '@/utils/show'
 
 export const deserializeSegmentation = ({
   annotations,
   path
-}: BBoxDataset): Dataset => {
-  const bboxes = createBBoxesFromDB(annotations)
+}: SegmentationDataset): Dataset => {
+  const segmentations = createSegmentationFromDB(annotations)
 
   return {
-    annotations: bboxes,
+    annotations: segmentations,
     path
   }
 }
@@ -27,24 +33,30 @@ export const deserializeBBox = ({
   }
 }
 
-export const importBBox = (bboxDatasets: BBoxDataset[]) => {
-  const datasets: Dataset[] = bboxDatasets.map(deserializeBBox)
+export const importBBox = (datasets: BBoxDataset[]) => {
+  const bboxDatasets: Dataset[] = datasets.map(deserializeBBox)
 
-  return datasets
+  return bboxDatasets
+}
+
+export const importSegmentation = (datasets: SegmentationDataset[]) => {
+  const bboxDatasets: Dataset[] = datasets.map(deserializeSegmentation)
+
+  return bboxDatasets
 }
 
 // 디렉터리에 있는 이미지만 데이터셋에 넣어서 반환함
-export const validateBBoxDatasets = async (
-  project: DBProject<BBox>
-): Promise<BBoxDataset[]> => {
+export const validateDatasets = async (
+  project: DBProjectType
+): Promise<DBDataset<AnnotationType>[]> => {
   const path = project.info.path
   const datasetsMap = project.datasets.reduce((acc, dataset) => {
     acc[dataset.path] = dataset
     return acc
-  }, {} as Record<string, BBoxDataset>)
+  }, {} as Record<string, DBDataset<AnnotationType>>)
 
   const imagePaths = await readImagePaths(path)
-  const datasets = createDBDatasets(imagePaths).map(
+  const datasets = createDatasets(imagePaths).map(
     dataset => datasetsMap[dataset.path] || dataset
   )
 

@@ -5,9 +5,13 @@ import { db } from '@/electron/db'
 import { ProjectInfo, Project } from '@/models/user/project/index'
 import { ProjectState } from './types'
 import { RootState } from '@/store/types'
-import { createDBDatasetsFromPath } from '@/utils/file'
-import { DBProject, BBoxDataset, BBox, AnnotationType } from '@/models/db'
-import { validateBBoxDatasets, importBBox } from '@/utils/import'
+import { createDatasetsFromPath } from '@/utils/file'
+import { BBoxDataset, DBProjectType, SegmentationDataset } from '@/models/db'
+import {
+  validateDatasets,
+  importBBox,
+  importSegmentation
+} from '@/utils/import'
 
 const projectModule: Module<ProjectState, RootState> = {
   state: {
@@ -27,8 +31,8 @@ const projectModule: Module<ProjectState, RootState> = {
       projectInfo.id = uuidv4()
       projectInfo.lastSelectedIndex = 0
 
-      const datasets = await createDBDatasetsFromPath(projectInfo.path)
-      const dbProject: DBProject<AnnotationType> = {
+      const datasets = await createDatasetsFromPath(projectInfo.path)
+      const dbProject: DBProjectType = {
         info: projectInfo,
         datasets
       }
@@ -48,15 +52,16 @@ const projectModule: Module<ProjectState, RootState> = {
         .find({ info: { id } })
         .value()
 
-      dbProject.datasets = await validateBBoxDatasets(
-        dbProject as DBProject<BBox>
-      )
+      dbProject.datasets = await validateDatasets(dbProject)
 
       await db.write()
 
       const project: Project = {
         info: dbProject.info,
-        datasets: importBBox(dbProject.datasets as BBoxDataset[])
+        datasets:
+          dbProject.info.type === 'BBox'
+            ? importBBox(dbProject.datasets as BBoxDataset[])
+            : importSegmentation(dbProject.datasets as SegmentationDataset[])
       }
 
       commit('openProject', project)

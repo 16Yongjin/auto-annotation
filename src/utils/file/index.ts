@@ -1,4 +1,4 @@
-import { BBoxDataset } from '@/models/db'
+import { AnnotationType, Dataset } from '@/models/db'
 import path from 'path'
 import { remote } from 'electron'
 import { readdir } from 'mz/fs'
@@ -28,28 +28,30 @@ export const readImagePaths = async (dirPath: string) => {
   return imagePaths
 }
 
-const toDataset = (path: string): BBoxDataset => ({
+const toDataset = (path: string): Dataset<AnnotationType> => ({
   path,
   annotations: []
 })
 
-export const createDBDatasets = (imagePaths: string[]): BBoxDataset[] => {
+export const createDatasets = (
+  imagePaths: string[]
+): Dataset<AnnotationType>[] => {
   const datasets = imagePaths.map(toDataset)
 
   return datasets
 }
 
-export const createDBDatasetsFromPath = async (path: string) => {
+export const createDatasetsFromPath = async (path: string) => {
   const images = await readImagePaths(path)
-  const datasets = createDBDatasets(images)
+  const datasets = createDatasets(images)
 
   return datasets
 }
 
-export const loadDBDatasets = async (): Promise<BBoxDataset[]> => {
+export const loadDBDatasets = async (): Promise<Dataset<AnnotationType>[]> => {
   const dirPath = await showFolderDialog()
   const imagePaths = await readImagePaths(dirPath)
-  const datasets = createDBDatasets(imagePaths)
+  const datasets = createDatasets(imagePaths)
 
   return datasets
 }
