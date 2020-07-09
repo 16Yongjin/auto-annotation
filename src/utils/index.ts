@@ -1,4 +1,3 @@
-export * from '@/utils/categories'
 export * from '@/utils/zoom'
 export * from '@/utils/move'
 export * from '@/utils/dataUrl'

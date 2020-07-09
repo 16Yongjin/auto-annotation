@@ -1,10 +1,10 @@
 import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
 
-import Main from '@/views/Main.vue'
-import BBox from '@/views/BBox.vue'
-import Segmentator from '@/views/Segmentator.vue'
-import PageNotFound from '@/views/PageNotFound.vue'
+import Main from '@/views/main/Main.vue'
+import BBox from '@/views/annotator/BBox.vue'
+import Segmentator from '@/views/annotator/Segmentator.vue'
+import PageNotFound from '@/views/common/PageNotFound.vue'
 
 Vue.use(VueRouter)
 

@@ -7,7 +7,7 @@ v-app
 </template>
 
 <script lang="ts">
-import ProjectBar from '@/views/ProjectBar.vue'
+import ProjectBar from '@/views/common/ProjectBar.vue'
 
 export default {
   name: 'App',

@@ -39,7 +39,7 @@ import LabelModal from '@/components/annotator/LabelModal.vue'
 import Toolbar from '@/components/annotator/segmentation/Toolbar.vue'
 import ImagePreviewBottomBar from '@/components/annotator/ImagePreviewBottomBar.vue'
 import AnnotationViewer from '@/components/annotator/AnnotationViewer.vue'
-import Annotator from '@/views/Annotator'
+import Annotator from '@/views/annotator/Annotator'
 
 @Component({
   name: 'Segmentator',

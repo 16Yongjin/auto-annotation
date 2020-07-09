@@ -2,15 +2,15 @@ import { Module } from 'vuex'
 import { v4 as uuidv4 } from 'uuid'
 import router from '@/router'
 import { db } from '@/electron/db'
-import { ProjectInfo, Project } from '@/models/user/project/index'
+import { ProjectInfo, Project } from '@/models/user/project'
 import { ProjectState } from './types'
 import { RootState } from '@/store/types'
-import { createDatasetsFromPath } from '@/utils/file'
 import { BBoxDataset, DBProjectType, SegmentationDataset } from '@/models/db'
 import {
-  validateDatasets,
   importBBox,
-  importSegmentation
+  importSegmentation,
+  validateDatasets,
+  createDatasetsFromDir
 } from '@/utils/import'
 
 const projectModule: Module<ProjectState, RootState> = {
@@ -31,7 +31,7 @@ const projectModule: Module<ProjectState, RootState> = {
       projectInfo.id = uuidv4()
       projectInfo.lastSelectedIndex = 0
 
-      const datasets = await createDatasetsFromPath(projectInfo.path)
+      const datasets = await createDatasetsFromDir(projectInfo.path)
       const dbProject: DBProjectType = {
         info: projectInfo,
         datasets
