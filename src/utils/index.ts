@@ -1,7 +1,6 @@
 export * from '@/utils/categories'
 export * from '@/utils/zoom'
 export * from '@/utils/move'
-export * from '@/utils/color'
 export * from '@/utils/dataUrl'
 export * from '@/utils/export/bbox'
 export * from '@/utils/import'
