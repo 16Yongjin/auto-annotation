@@ -26,7 +26,6 @@ div.h100.rel.view
 </template>
 
 <script lang="ts">
-import Paper from 'paper'
 import { Component } from 'vue-property-decorator'
 import { Annotation } from '@/models/user/annotation'
 import { UserAction } from '@/models/user/actions'
@@ -76,30 +75,14 @@ export default class Segmentator extends Annotator {
     console.log('export!')
   }
 
-  attachAnnotationInteraction(bbox: Annotation) {
-    bbox.item.onMouseDown = this.onSegementationMouseDown(bbox)
-    bbox.item.onMouseEnter = this.onSegementationMouseEnter(bbox)
-    bbox.item.onMouseLeave = this.onSegementationMouseLeave(bbox)
+  attachAnnotationInteraction(annotation: Annotation) {
+    annotation.item.onMouseDown = this.onSegementationMouseDown(annotation)
   }
 
-  onSegementationMouseEnter(bbox: Annotation) {
+  onSegementationMouseDown(annotation: Annotation) {
     return () => {
       if (this.selectedTool !== Tool.Edit) return
-      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.2
-    }
-  }
-
-  onSegementationMouseLeave(bbox: Annotation) {
-    return () => {
-      if (bbox.item.selected) return
-      bbox.item.fillColor = new Paper.Color('rgba(255,255,255,0.01)')
-    }
-  }
-
-  onSegementationMouseDown(bbox: Annotation) {
-    return () => {
-      if (this.selectedTool !== Tool.Edit) return
-      this.onAnnotationSelect(bbox)
+      this.onAnnotationSelect(annotation)
     }
   }
 }

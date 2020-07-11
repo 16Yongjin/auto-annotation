@@ -108,6 +108,14 @@ export default class BBox extends Annotator {
     bbox.item.onMouseLeave = this.onBBoxMouseLeave(bbox)
   }
 
+  selectItem(item: paper.Item) {
+    item.fillColor = new Paper.Color('rgba(0,255,0,0.2)')
+  }
+
+  deselectItem(item: paper.Item) {
+    item.fillColor = new Paper.Color('rgba(255,255,255,0.01)')
+  }
+
   onBBoxMouseEnter(bbox: Annotation) {
     return () => {
       if (this.selectedTool !== Tool.Edit) return
@@ -118,7 +126,7 @@ export default class BBox extends Annotator {
   onBBoxMouseLeave(bbox: Annotation) {
     return () => {
       if (bbox.item.selected) return
-      bbox.item.fillColor = new Paper.Color('rgba(255,255,255,0.01)')
+      if (bbox.item.fillColor) bbox.item.fillColor.alpha = 0.01
     }
   }
 

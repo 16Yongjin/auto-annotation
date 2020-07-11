@@ -251,14 +251,21 @@ export default class Annotator extends Vue {
     this.onAnnotationSelect(null)
   }
 
+  selectItem(_item: paper.Item) {
+    console.log('select Item')
+  }
+
+  deselectItem(_item: paper.Item) {
+    console.log('deselect item')
+  }
+
   resetSelectedAnnotation() {
     Paper.project.activeLayer.selected = false
 
     if (!this.selectedAnnotation) return
 
-    this.selectedAnnotation.item.fillColor = new Paper.Color(
-      'rgba(255,255,255,0.01)'
-    )
+    this.deselectItem(this.selectedAnnotation.item)
+
     this.selectedAnnotation = null
   }
 
@@ -272,7 +279,7 @@ export default class Annotator extends Vue {
     await this.$nextTick()
 
     annotation.item.selected = true
-    annotation.item.fillColor = new Paper.Color('rgba(0,255,0,0.2)')
+    this.selectItem(annotation.item)
     this.selectedAnnotation = annotation
   }
 }
