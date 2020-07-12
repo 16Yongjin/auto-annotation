@@ -251,12 +251,12 @@ export default class Annotator extends Vue {
     this.onAnnotationSelect(null)
   }
 
-  selectItem(_item: paper.Item) {
-    console.log('select Item')
+  selectItem(item: paper.Item) {
+    console.log('select Item', item)
   }
 
-  deselectItem(_item: paper.Item) {
-    console.log('deselect item')
+  deselectItem(item: paper.Item) {
+    console.log('deselect item', item)
   }
 
   resetSelectedAnnotation() {

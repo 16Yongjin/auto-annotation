@@ -64,7 +64,7 @@ export default class BBox extends Annotator {
     const image = this.selectedDataset.raster.image
     const dataUrl = toDataUrl(image)
     const predictions = await ipc.callMain<string, DetectedObject[]>(
-      'detect',
+      'detect/bbox',
       dataUrl
     )
     const bboxes = createBBoxFromDetector(predictions)

@@ -27,6 +27,10 @@ div.h100.rel.view
 
 <script lang="ts">
 import { Component } from 'vue-property-decorator'
+// import { ipcRenderer as ipc } from 'electron-better-ipc'
+import * as tf from '@tensorflow/tfjs'
+import '@tensorflow/tfjs-backend-webgl'
+import * as deeplab from '@tensorflow-models/deeplab'
 import { Annotation } from '@/models/user/annotation'
 import { UserAction } from '@/models/user/actions'
 import {
@@ -51,6 +55,25 @@ import Annotator from '@/views/annotator/Annotator'
   extends: Annotator
 })
 export default class Segmentator extends Annotator {
+  model: deeplab.SemanticSegmentation | null = null
+
+  async onDetectObject() {
+    if (this.detectorLoading || !this.selectedDataset?.raster) return
+
+    this.detectorLoading = true
+
+    if (!this.model) {
+      console.time('model loading')
+      this.model = await deeplab.load({ base: 'pascal', quantizationBytes: 2 })
+      console.timeEnd('model loading')
+    }
+    const segment = await this.model.segment(this.selectedDataset.raster.image)
+
+    console.log(segment)
+
+    this.detectorLoading = false
+  }
+
   useDrawTool() {
     this.removeTool()
     this.tool = createSegmentationDrawTool((userAction: UserAction) => {
