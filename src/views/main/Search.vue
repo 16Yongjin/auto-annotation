@@ -2,10 +2,10 @@
 div.flex-grow-1
   v-toolbar.toolbar.fill-width(elevation='0')
     v-text-field(v-model='query' hide-details prepend-icon='mdi-magnify' placeholder='Search' single-line)
-  v-container.fill-height.align-start
+  v-container.pa-0.fill-height.align-start
     v-row.fill-height.justify-center.align-center(v-if='!query')
       div Type something to start searching
-    v-row(v-else-if='projects.length' dense)
+    v-row.pa-3(v-else-if='projects.length' dense :style='backgroundColor')
       project-card(v-for='project in projects' :key='project.id' :project='project' @delete='onProjectDelete')
     v-row.fill-height.justify-center.align-center(v-else)
       div No project found
@@ -40,6 +40,12 @@ export default class SearchProject extends Vue {
   async onProjectDelete(id: string) {
     await this.deleteProject(id)
     this.onQueryChanged()
+  }
+
+  get backgroundColor() {
+    return {
+      backgroundColor: this.$vuetify.theme.dark ? '#121212' : 'white'
+    }
   }
 }
 </script>

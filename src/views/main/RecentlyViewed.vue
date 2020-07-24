@@ -10,7 +10,7 @@ div.d-flex.flex-column.flex-grow-1
       @on='dialog = true'
       @close='dialog = false')
 
-  v-container(fluid)
+  v-container(fluid :style="backgroundColor")
     v-row(dense)
       project-card(v-for='project in projects' :key='project.id' :project='project' @delete='onProjectDelete')
 </template>
@@ -54,6 +54,12 @@ export default class RecentlyViewed extends Vue {
   async onProjectDelete(id: string) {
     await this.deleteProject(id)
     this.loadProject()
+  }
+
+  get backgroundColor() {
+    return {
+      backgroundColor: this.$vuetify.theme.dark ? '#121212' : 'white'
+    }
   }
 }
 </script>

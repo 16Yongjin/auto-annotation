@@ -1,13 +1,24 @@
 <template lang="pug">
 div.d-flex.view.fill-height
   v-navigation-drawer.main-nav(permanent fixed)
-    v-list(dense nav)
-      v-list-item-group(v-model='selectedMenuIndex')
-        v-list-item(v-for='menu in menus' :key='menu.title' link)
-          v-list-item-icon
-            v-icon {{ menu.icon }}
-          v-list-item-content
-            v-list-item-title {{ menu.title }}
+    .container.pa-0
+      v-list(dense nav)
+        v-list-item-group(v-model='selectedMenuIndex')
+          v-list-item(v-for='menu in menus' :key='menu.title' link)
+            v-list-item-icon
+              v-icon {{ menu.icon }}
+            v-list-item-content
+              v-list-item-title {{ menu.title }}
+      v-spacer
+      v-list.mb-3
+        v-list-item
+          v-switch(
+            style='position: absolute; bottom: 0;'
+              v-model="$vuetify.theme.dark"
+              hide-details
+              inset
+              label="Theme Dark"
+            )
 
   components(:is='selectedComponent')
 </template>
@@ -50,5 +61,13 @@ export default class MainView extends Vue {
 
 .main-nav {
   margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
 }
 </style>
