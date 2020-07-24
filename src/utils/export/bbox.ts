@@ -22,7 +22,7 @@ export const processExportBBox = (datasets: Dataset[]) => {
     }
   })
 
-  return exportData
+  return JSON.stringify(exportData)
 }
 
 export const serializeBBoxDataset = ({ annotations, path }: Dataset) => {

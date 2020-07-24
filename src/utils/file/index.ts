@@ -1,6 +1,6 @@
 import path from 'path'
 import { remote } from 'electron'
-import { readdir } from 'mz/fs'
+import { readdir, writeFile } from 'mz/fs'
 
 export const showFolderDialog = async () => {
   const { filePaths, canceled } = await remote.dialog.showOpenDialog({
@@ -25,4 +25,31 @@ export const readImagePaths = async (dirPath: string) => {
   const imagePaths = fileNames.filter(filterJPEG).map(toFullPath)
 
   return imagePaths
+}
+
+interface SaveFileInterface {
+  defaultPath: string
+  file: string
+}
+
+export const saveFile = async ({ defaultPath, file }: SaveFileInterface) => {
+  const win = remote.getCurrentWindow()
+  try {
+    const dialogOptions = {
+      title: 'Save Annotation json',
+      defaultPath: `${defaultPath}/output.json`,
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    }
+
+    const { canceled, filePath } = await remote.dialog.showSaveDialog(
+      win,
+      dialogOptions
+    )
+
+    if (canceled || !filePath) return
+
+    await writeFile(filePath, file)
+  } catch (e) {
+    remote.dialog.showErrorBox('Failed to save annotation file', e.toString())
+  }
 }

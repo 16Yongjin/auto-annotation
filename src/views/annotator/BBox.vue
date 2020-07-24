@@ -35,6 +35,7 @@ import { UserAction, MultipleDrawAction } from '@/models/user/actions'
 import {
   Tool,
   toDataUrl,
+  saveFile,
   BBoxEditTool,
   createBBoxDrawTool,
   createBBoxFromDetector,
@@ -98,8 +99,11 @@ export default class BBox extends Annotator {
   }
 
   exportAnnotation() {
+    if (!this.project) return
+
     const exportData = processExportBBox(this.datasets)
-    console.log(exportData)
+
+    saveFile({ defaultPath: this.project.info.path, file: exportData })
   }
 
   attachAnnotationInteraction(bbox: Annotation) {

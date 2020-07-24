@@ -20,6 +20,7 @@ module.exports = {
       { accessibility: 'no-public' }
     ],
     '@typescript-eslint/camelcase': 'off',
-    '@typescript-eslint/ban-ts-ignore': 'off'
+    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/member-delimiter-style': 'off'
   }
 }
