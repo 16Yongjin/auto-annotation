@@ -20,8 +20,6 @@ export function saveDataset(id: string, dataset: Dataset) {
     .get(['info', 'type'])
     .value()
 
-  console.log('projectType', projectType)
-
   return db
     .get('projects')
     .find({ info: { id } })

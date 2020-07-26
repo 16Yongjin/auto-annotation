@@ -37,7 +37,7 @@ import {
   toDataUrl,
   saveFile,
   BBoxEditTool,
-  createBBoxDrawTool,
+  BBoxDrawTool,
   createBBoxFromDetector,
   processExportBBox
 } from '@/utils'
@@ -80,7 +80,7 @@ export default class BBox extends Annotator {
 
   useDrawTool() {
     this.removeTool()
-    this.tool = createBBoxDrawTool((userAction: UserAction) => {
+    this.tool = new BBoxDrawTool((userAction: UserAction) => {
       this.addUserAction(userAction)
 
       const item = userAction.item as paper.Path.Rectangle

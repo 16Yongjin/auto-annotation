@@ -21,36 +21,39 @@ function drawBBox(start: paper.Point, end: paper.Point, color: paper.Color) {
 const minimumBBoxSize = (box: paper.Path.Rectangle) =>
   box.bounds.width >= 5 && box.bounds.height >= 5
 
-export function createBBoxDrawTool(onDrawEnd: OnAction) {
-  const tool = new Paper.Tool()
+export class BBoxDrawTool extends Paper.Tool {
+  boxColor: paper.Color = Paper.Color.random()
+  box: paper.Path.Rectangle | null = null
+  onDraw: OnAction = () => null
 
-  let boxColor = Paper.Color.random()
-  let box: paper.Path.Rectangle | null = null
-
-  tool.onMouseDown = function({ downPoint, point }: paper.ToolEvent) {
-    if (box) box.remove()
-    boxColor = Paper.Color.random()
-    box = drawBox(downPoint, point, boxColor)
-  }
-  tool.onMouseDrag = function({ downPoint, point }: paper.ToolEvent) {
-    if (box) box.remove()
-    box = drawBox(downPoint, point, boxColor)
+  constructor(onDraw: OnAction) {
+    super()
+    this.onDraw = onDraw
   }
 
-  tool.onMouseUp = function({ downPoint, point }: paper.ToolEvent) {
-    if (box) box.remove()
-    box = drawBBox(downPoint, point, boxColor)
+  onMouseDown = ({ downPoint, point }: paper.ToolEvent) => {
+    if (this.box) this.box.remove()
+    this.boxColor = Paper.Color.random()
+    this.box = drawBox(downPoint, point, this.boxColor)
+  }
 
-    if (minimumBBoxSize(box)) {
-      const userAction = new DrawActoin(box)
+  onMouseDrag = ({ downPoint, point }: paper.ToolEvent) => {
+    if (this.box) this.box.remove()
+    this.box = drawBox(downPoint, point, this.boxColor)
+  }
 
-      onDrawEnd(userAction)
+  onMouseUp = ({ downPoint, point }: paper.ToolEvent) => {
+    if (this.box) this.box.remove()
+    this.box = drawBBox(downPoint, point, this.boxColor)
 
-      box = null
+    if (minimumBBoxSize(this.box)) {
+      const userAction = new DrawActoin(this.box)
+
+      this.onDraw(userAction)
+
+      this.box = null
     } else {
-      box.remove()
+      this.box.remove()
     }
   }
-
-  return tool
 }
