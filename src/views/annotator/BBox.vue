@@ -113,7 +113,10 @@ export default class BBox extends Annotator {
   }
 
   selectItem(item: paper.Item) {
-    item.fillColor = new Paper.Color('rgba(0,255,0,0.2)')
+    const itemColor =
+      item.strokeColor?.clone() || new Paper.Color('rgba(0,255,0,0.2)')
+    itemColor.alpha = 0.2
+    item.fillColor = itemColor
   }
 
   deselectItem(item: paper.Item) {
