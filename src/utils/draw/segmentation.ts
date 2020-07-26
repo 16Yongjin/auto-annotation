@@ -30,10 +30,11 @@ export function createSegmentationDrawTool(onDrawEnd: OnAction) {
 
     path.add(point)
     path.closePath()
-    path.simplify()
-    path.flatten(4)
 
     if (path.length > 30) {
+      path.simplify()
+      path.flatten(4)
+
       const compoundPath = drawSegmentation(path)
 
       const userAction = new DrawActoin(compoundPath)
