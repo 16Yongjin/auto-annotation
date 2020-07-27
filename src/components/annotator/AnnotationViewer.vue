@@ -1,7 +1,7 @@
 <template lang="pug">
 v-container.canvas-container.pa-0(fluid)
     v-row.ma-0.h100
-      v-col.canvas-view.h100(cols='9')
+      v-col.canvas-view.h100(cols='9' :style='{ background: canvasBackground }')
         canvas.expand(:id='canvasId' @wheel='onWheel' resize='true' :style='{ cursor }')
       v-col.pa-0.h100(cols='3')
         annotation-list.annotaion-list.h100(:annotations='annotationList' @select='onAnnotaionSelect')
@@ -35,6 +35,10 @@ export default class AnnotationViewer extends Vue {
 
   get canvasId() {
     return `canvas-${this.type}`
+  }
+
+  get canvasBackground() {
+    return this.$vuetify.theme.dark ? '#333333' : '#c8c8c8'
   }
 
   activated() {
@@ -74,7 +78,6 @@ export default class AnnotationViewer extends Vue {
 }
 
 .canvas-view {
-  background: #c8c8c8;
   padding: 0;
 }
 

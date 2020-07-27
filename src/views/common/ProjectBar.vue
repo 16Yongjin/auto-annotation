@@ -54,6 +54,7 @@ export default class ProjectBar extends Vue {
 .project-toolbar {
   border-bottom: 1px solid black;
 }
+
 .project-toolbar .v-toolbar__content {
   padding: 0 !important;
 }

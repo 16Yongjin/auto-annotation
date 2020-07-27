@@ -1,7 +1,7 @@
 <template lang="pug">
 v-dialog(:value='active' max-width='600px' @outside="$emit('close')")
   template(v-slot:activator='{ on, attrs }')
-    v-btn(icon color='black' v-bind='attrs' v-on='on' @click="$emit('on')")
+    v-btn(icon v-bind='attrs' v-on='on' @click="$emit('on')")
       v-icon mdi-plus
   v-card
     v-card-title

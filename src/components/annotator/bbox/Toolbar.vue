@@ -5,7 +5,7 @@ v-navigation-drawer(absolute mini-variant permanent)
         v-icon mdi-eye
         div vision
 
-      v-btn-toggle.flex-column(borderless :value='selectedTool')
+      v-btn-toggle.tool-toggle.flex-column(borderless :value='selectedTool')
         v-btn.toolbar-icon(text @click='useDrawTool')
           v-icon mdi-vector-square
           div draw
@@ -46,4 +46,8 @@ export default class BBoxToolbar extends Vue {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.tool-toggle {
+  background: unset !important;
+}
+</style>
