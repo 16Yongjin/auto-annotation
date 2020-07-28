@@ -36,3 +36,7 @@ export interface DBProject<T extends AnnotationType> {
 }
 
 export type DBProjectType = DBProject<AnnotationType>
+
+export interface Settings {
+  darkMode: boolean
+}
