@@ -27,7 +27,6 @@ div.h100.rel.view
 
 <script lang="ts">
 import { Component } from 'vue-property-decorator'
-// import { ipcRenderer as ipc } from 'electron-better-ipc'
 import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-webgl'
 import * as deeplab from '@tensorflow-models/deeplab'

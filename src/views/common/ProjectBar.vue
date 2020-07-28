@@ -1,7 +1,7 @@
 <template lang="pug">
 v-app-bar.project-toolbar(fixed dark elevation='0' height='56px')
   v-btn-toggle.h100(borderless mandatory tile)
-    v-btn.h100(text to="/" )
+    v-btn.h100(text to="/" width='56px')
       v-icon mdi-home
     v-btn.h100(text v-for='project, i in projects' :key='project.info.id' :to="toUrl(project)")
       span.project-name {{ project.info.name }}
