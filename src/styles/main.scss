@@ -33,3 +33,7 @@
 body::-webkit-scrollbar {
   display: none;
 }
+
+.theme--dark.v-navigation-drawer {
+  background-color: #1e1e1e !important;
+}

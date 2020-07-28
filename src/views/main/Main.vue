@@ -1,6 +1,6 @@
 <template lang="pug">
 div.d-flex.view.fill-height
-  v-navigation-drawer.main-nav(permanent fixed  :style='{ backgroundColor }')
+  v-navigation-drawer.main-nav(permanent fixed)
     .container.pa-0
       v-list(dense nav)
         v-list-item-group(v-model='selectedMenuIndex')
@@ -48,10 +48,6 @@ export default class MainView extends Vue {
       component: 'RecentlyViewed'
     }
   ]
-
-  get backgroundColor() {
-    return this.$vuetify.theme.dark ? '#1e1e1e' : '#ffffff'
-  }
 }
 </script>
 

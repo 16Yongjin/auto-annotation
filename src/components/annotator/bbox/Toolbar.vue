@@ -1,5 +1,5 @@
 <template lang="pug">
-v-navigation-drawer(absolute mini-variant permanent :style='{ backgroundColor }')
+v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
       v-btn.toolbar-icon(text @click='onDetectObject' :loading='detectorLoading')
         v-icon mdi-eye
@@ -43,10 +43,6 @@ export default class BBoxToolbar extends Vue {
   @Prop() private exportAnnotation!: Function
   @Prop() private selectedTool!: number
   @Prop() private detectorLoading!: boolean
-
-  get backgroundColor() {
-    return this.$vuetify.theme.dark ? '#1e1e1e' : '#ffffff'
-  }
 }
 </script>
 
