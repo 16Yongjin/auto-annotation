@@ -87,9 +87,11 @@ const projectModule: Module<ProjectState, RootState> = {
       if (id === activeProjectId) {
         const nextProject = state.activeProjects[index + 1]
         const prevProject = state.activeProjects[index - 1]
+        const toUrl = (p: Project) =>
+          `/${p.info.type.toLowerCase()}/${p.info.id}`
 
-        if (nextProject) router.push(`/bbox/${nextProject.info.id}`)
-        else if (prevProject) router.push(`/bbox/${prevProject.info.id}`)
+        if (nextProject) router.push(toUrl(nextProject))
+        else if (prevProject) router.push(toUrl(prevProject))
         else router.push('/')
       }
 
