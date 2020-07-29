@@ -8,6 +8,7 @@ export * from '@/utils/draw'
 export * from '@/utils/edit'
 export * from '@/utils/file'
 export * from '@/utils/system'
+export * from '@/utils/image'
 
 export enum Tool {
   Draw,

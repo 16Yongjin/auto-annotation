@@ -2,6 +2,7 @@ import Paper, { Point } from 'paper'
 import { pipe, chunk, map } from 'lodash/fp'
 import { Annotation } from '@/models/user/annotation'
 import { Segmentation } from '@/models/db'
+import { DeepLabOutput } from '@tensorflow-models/deeplab/dist/types'
 
 const toPoint = ([x, y]: number[]) => new Point(x, y)
 
@@ -39,4 +40,10 @@ export function createSegmentationFromDB(
   segmentations.forEach(b => b.item.remove())
 
   return segmentations
+}
+
+export function createSegmentationFromDetector(data: DeepLabOutput[]) {
+  data.map(d => {
+    console.log(d.legend)
+  })
 }

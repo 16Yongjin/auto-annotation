@@ -14,8 +14,6 @@ const detect = async (dataUrl: string) => {
   if (!model) model = await deeplab.load({ base: modelName, quantizationBytes })
   const segments = await model.segment(image)
 
-  console.log(segments)
-
   return segments
 }
 
