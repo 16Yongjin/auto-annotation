@@ -934,11 +934,6 @@
   resolved "https://registry.yarnpkg.com/@tensorflow-models/coco-ssd/-/coco-ssd-2.0.3.tgz#def1e23e4db0f6495bc41de9282af3e4cb392d18"
   integrity sha512-jTyGC6on59ENZNVm5GYtGn3JNaM/7nULMB/2At11MavvQt6Rlfht/5BJs/r5Hty2r7BB4C6iDrllrkXRZeOtLQ==
 
-"@tensorflow-models/deeplab@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@tensorflow-models/deeplab/-/deeplab-0.1.0.tgz#79e492210d557acb1cd78bc267a25bb978116729"
-  integrity sha512-duAOo9QiZrh0JnxGkojIyK5qU7j4XRZw7lC7kkLjuDPioe7kdGoXwGyj6WpcTWjyrzGZAvDxI0xBsC/PrgXQsA==
-
 "@tensorflow/tfjs-converter@1.6.1":
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/@tensorflow/tfjs-converter/-/tfjs-converter-1.6.1.tgz#b97973800c908314adb3f5a5619efb364151d8de"

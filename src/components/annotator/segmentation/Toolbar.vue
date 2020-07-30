@@ -1,9 +1,9 @@
 <template lang="pug">
 v-navigation-drawer(absolute mini-variant permanent)
     .toolbar-icon-container
-      v-btn.toolbar-icon(text @click='onDetectObject' :loading='detectorLoading')
-        v-icon mdi-eye
-        div vision
+      //- v-btn.toolbar-icon(text @click='onDetectObject' :loading='detectorLoading')
+      //-   v-icon mdi-eye
+      //-   div vision
 
       v-btn-toggle.flex-column(borderless :value='selectedTool')
         v-btn.toolbar-icon(text @click='useDrawTool')

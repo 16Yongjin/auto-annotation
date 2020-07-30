@@ -27,17 +27,12 @@ div.h100.rel.view
 
 <script lang="ts">
 import { Component } from 'vue-property-decorator'
-import { ipcRenderer as ipc } from 'electron-better-ipc'
-import { DeepLabOutput } from '@tensorflow-models/deeplab/dist/types'
 import { Annotation } from '@/models/user/annotation'
 import { UserAction } from '@/models/user/actions'
 import {
   createSegmentationDrawTool,
   createSegmentationEditTool,
-  Tool,
-  toDataUrl,
-  createSegmentationFromDetector,
-  createImageFromData
+  Tool
 } from '@/utils'
 import LabelModal from '@/components/annotator/LabelModal.vue'
 import Toolbar from '@/components/annotator/segmentation/Toolbar.vue'
@@ -61,25 +56,8 @@ export default class Segmentator extends Annotator {
 
     this.detectorLoading = true
 
-    const image = this.selectedDataset.raster.image
-    const dataUrl = toDataUrl(image)
-    const prediction = await ipc.callMain<string, DeepLabOutput>(
-      'detect/segmentation',
-      dataUrl
-    )
-    console.log('predictions', Object.keys(prediction.legend))
-    const { segmentationMap, width, height } = prediction
-
-    const segmentationMapData = new ImageData(segmentationMap, width, height)
-
-    this.selectedDataset.raster.image = createImageFromData(segmentationMapData)
-
-    // const segmentations = createSegmentationFromDetector(predictions)
-    // segmentations.forEach(segment => this.attachAnnotationInteraction(segment))
-    // this.addAnnotations(segmentations)
-
-    // const items = bboxes.map(b => b.item)
-    // this.addUserAction(new MultipleDrawAction(items))
+    // TODO Find or Create new Segmentation Model
+    console.log('detect obejct!')
 
     this.detectorLoading = false
   }
