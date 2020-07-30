@@ -80,7 +80,6 @@ app.on('ready', async () => {
   server = appServer
 
   require('@/electron/detect/bbox')
-  require('@/electron/detect/segmentation')
 })
 
 // Exit cleanly on request from parent process in development mode.
