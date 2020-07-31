@@ -31,17 +31,20 @@ export default class ProjectBar extends Vue {
     return `/${project.info.type.toLowerCase()}/${project.info.id}`
   }
 
-  keyHandler({ ctrlKey, key }: KeyboardEvent) {
-    if (ctrlKey && key.match(/^\d+$/)) {
-      const project = this.projects[parseInt(key) - 1]
+  keyHandler(e: KeyboardEvent) {
+    if (e.ctrlKey && e.key.match(/^\d+$/)) {
+      const project = this.projects[parseInt(e.key) - 1]
       if (!project || this.currentId === project.info.id) return
       this.$router.push(this.toUrl(project))
     }
 
     if (this.isActive) return
 
-    if (ctrlKey && key === 'h') this.$router.push('/')
-    if (ctrlKey && key === 'w') this.closeProject(this.currentId)
+    if (e.ctrlKey && e.key === 'h') this.$router.push('/')
+    if (e.ctrlKey && e.key === 'w') {
+      this.closeProject(this.currentId)
+      e.preventDefault()
+    }
   }
 
   mounted() {

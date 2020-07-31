@@ -69,8 +69,6 @@ const projectModule: Module<ProjectState, RootState> = {
       return project
     },
     async getProjectById({ getters, dispatch }, id: string) {
-      console.log('getProjectById')
-
       const project = getters.getProjectById(id)
 
       if (!project) {

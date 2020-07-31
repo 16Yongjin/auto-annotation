@@ -47,8 +47,7 @@ import Annotator from '@/views/annotator/Annotator'
     ImagePreviewBottomBar,
     Toolbar,
     AnnotationViewer
-  },
-  extends: Annotator
+  }
 })
 export default class Segmentator extends Annotator {
   async onDetectObject() {
