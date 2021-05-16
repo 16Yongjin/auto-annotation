@@ -24,7 +24,7 @@
     "epic-spinners": "^1.1.0",
     "express": "^4.17.1",
     "fetch-mock": "^9.10.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "lowdb": "^1.0.0",
     "mz": "^2.7.0",
     "node-fetch": "^2.6.0",
