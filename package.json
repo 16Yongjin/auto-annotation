@@ -27,7 +27,7 @@
     "lodash": "^4.17.21",
     "lowdb": "^1.0.0",
     "mz": "^2.7.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "paper": "^0.12.4",
     "roboto-fontface": "*",
     "uuid": "^8.1.0",
